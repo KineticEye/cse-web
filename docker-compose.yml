@@ -1,0 +1,21 @@
+networks:
+  traefik-public:
+    external: true
+
+services:
+  public-web:
+    image: nginx:alpine
+    container_name: public-web
+    restart: unless-stopped
+    networks:
+      - traefik-public
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.public-web.rule=Host(`compscience.support`)"
+      - "traefik.http.routers.public-web.entrypoints=web"
+      - "traefik.http.routers.public-web-secure.rule=Host(`compscience.support`)"
+      - "traefik.http.routers.public-web-secure.entrypoints=websecure"
+      - "traefik.http.routers.public-web-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.public-web.loadbalancer.server.port=80"

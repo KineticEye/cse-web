@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompScience Support</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #1a1a2e; }
+    header { background: #1a1a2e; color: white; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+    header .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
+    header .logo span { color: #4fc3f7; }
+    header nav a { color: rgba(255,255,255,0.7); text-decoration: none; margin-left: 24px; font-size: 0.9rem; transition: color 0.2s; }
+    header nav a:hover { color: white; }
+    .hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: white; padding: 80px 40px; text-align: center; }
+    .hero h1 { font-size: 2.8rem; font-weight: 700; margin-bottom: 16px; }
+    .hero h1 span { color: #4fc3f7; }
+    .hero p { font-size: 1.15rem; color: rgba(255,255,255,0.75); max-width: 560px; margin: 0 auto 32px; line-height: 1.6; }
+    .hero-cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .btn { padding: 12px 28px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: #4fc3f7; color: #1a1a2e; }
+    .btn-primary:hover { background: #81d4fa; }
+    .btn-outline { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4); }
+    .btn-outline:hover { border-color: white; background: rgba(255,255,255,0.08); }
+    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+    .section-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+    .section-sub { color: #666; margin-bottom: 32px; font-size: 0.95rem; }
+    .faq { display: flex; flex-direction: column; gap: 12px; margin-bottom: 60px; }
+    .faq-item { background: white; border-radius: 10px; border: 1px solid #e8ecf0; overflow: hidden; transition: box-shadow 0.2s; }
+    .faq-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .faq-q { padding: 18px 24px; font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+    .faq-q .arrow { color: #4fc3f7; font-size: 1.2rem; transition: transform 0.2s; }
+    .faq-a { padding: 0 24px 18px; color: #555; font-size: 0.9rem; line-height: 1.7; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .arrow { transform: rotate(180deg); }
+    .downloads { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 60px; }
+    .dl-card { background: white; border-radius: 10px; border: 1px solid #e8ecf0; padding: 24px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow 0.2s; }
+    .dl-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .dl-icon { font-size: 2rem; }
+    .dl-title { font-weight: 700; font-size: 0.95rem; }
+    .dl-desc { font-size: 0.85rem; color: #666; line-height: 1.5; flex: 1; }
+    .dl-btn { display: inline-flex; align-items: center; gap: 6px; background: #1a1a2e; color: white; padding: 8px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; text-decoration: none; width: fit-content; transition: background 0.2s; }
+    .dl-btn:hover { background: #0f3460; }
+    .contact-box { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: white; border-radius: 14px; padding: 40px; text-align: center; }
+    .contact-box h3 { font-size: 1.4rem; margin-bottom: 10px; }
+    .contact-box p { color: rgba(255,255,255,0.75); margin-bottom: 24px; font-size: 0.95rem; }
+    footer { background: #1a1a2e; color: rgba(255,255,255,0.5); text-align: center; padding: 24px; font-size: 0.82rem; }
+    footer a { color: #4fc3f7; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Comp<span>Science</span></div>
+  <nav>
+    <a href="#faq">FAQ</a>
+    <a href="#downloads">Downloads</a>
+    <a href="#contact">Contact</a>
+    <a href="https://compscience.com" target="_blank">compscience.com →</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h1>CompScience <span>Support</span></h1>
+  <p>Everything your safety team needs - guides, resources, and answers to common questions about the CompScience platform.</p>
+  <div class="hero-cta">
+    <a href="#faq" class="btn btn-primary">Browse FAQ</a>
+    <a href="#downloads" class="btn btn-outline">Download Resources</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="faq">
+    <div class="section-title">Frequently Asked Questions</div>
+    <div class="section-sub">Quick answers to common questions about the CompScience platform.</div>
+    <div class="faq">
+
+      <div class="faq-item open">
+        <div class="faq-q" onclick="toggle(this)">How does CompScience analyze workplace safety? <span class="arrow">▾</span></div>
+        <div class="faq-a">CompScience uses existing camera infrastructure and AI-powered computer vision to automatically detect safety risks in real time - things like near-miss events, ergonomic hazards, and PPE compliance - without requiring additional hardware installation.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggle(this)">What camera systems are supported? <span class="arrow">▾</span></div>
+        <div class="faq-a">CompScience works with most standard IP camera systems and NVRs. We support RTSP streams from a wide range of manufacturers including Axis, Hikvision, Dahua, and many others. Our team will assess compatibility during onboarding.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggle(this)">How is footage handled? Is video stored? <span class="arrow">▾</span></div>
+        <div class="faq-a">CompScience processes video streams on-site or in a secure cloud environment. Only short clips around detected events are retained for review - raw footage is not stored. All data is encrypted in transit and at rest, and we operate in compliance with applicable privacy regulations.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggle(this)">How long does onboarding take? <span class="arrow">▾</span></div>
+        <div class="faq-a">Most customers are fully operational within 2-4 weeks of signing. This includes camera compatibility assessment, VMS configuration, AI model tuning for your environment, and training for your safety team.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggle(this)">How do I submit a support request? <span class="arrow">▾</span></div>
+        <div class="faq-a">You can reach our Customer Success Engineering team by emailing <a href="mailto:cse@compscience.support">cse@compscience.support</a>. We aim to respond within one business day. For urgent issues, contact your dedicated CSE directly.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="downloads">
+    <div class="section-title">Downloads</div>
+    <div class="section-sub">Guides, templates, and resources for your safety program.</div>
+    <div class="downloads">
+
+      <div class="dl-card">
+        <div class="dl-icon">📋</div>
+        <div class="dl-title">Onboarding Checklist</div>
+        <div class="dl-desc">Step-by-step guide to getting your CompScience deployment up and running.</div>
+        <a href="#" class="dl-btn">↓ Download PDF</a>
+      </div>
+
+      <div class="dl-card">
+        <div class="dl-icon">🎥</div>
+        <div class="dl-title">Camera Setup Guide</div>
+        <div class="dl-desc">Technical requirements and configuration instructions for supported camera systems.</div>
+        <a href="#" class="dl-btn">↓ Download PDF</a>
+      </div>
+
+      <div class="dl-card">
+        <div class="dl-icon">📊</div>
+        <div class="dl-title">Safety Report Template</div>
+        <div class="dl-desc">Monthly safety reporting template pre-configured for CompScience metrics.</div>
+        <a href="#" class="dl-btn">↓ Download XLSX</a>
+      </div>
+
+      <div class="dl-card">
+        <div class="dl-icon">🔒</div>
+        <div class="dl-title">Privacy & Security Overview</div>
+        <div class="dl-desc">Summary of how CompScience handles video data, privacy, and compliance.</div>
+        <a href="#" class="dl-btn">↓ Download PDF</a>
+      </div>
+
+      <div class="dl-card">
+        <div class="dl-icon">🛠️</div>
+        <div class="dl-title">VMS Configuration Guide</div>
+        <div class="dl-desc">How to configure your Video Management System for CompScience integration.</div>
+        <a href="#" class="dl-btn">↓ Download PDF</a>
+      </div>
+
+      <div class="dl-card">
+        <div class="dl-icon">📖</div>
+        <div class="dl-title">Platform User Guide</div>
+        <div class="dl-desc">Full documentation for the CompScience dashboard and alert management system.</div>
+        <a href="#" class="dl-btn">↓ Download PDF</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="contact" class="contact-box">
+    <h3>Need help from our team?</h3>
+    <p>Our Customer Success Engineers are here to help. Reach out and we'll get back to you within one business day.</p>
+    <a href="mailto:cse@compscience.support" class="btn btn-primary">cse@compscience.support</a>
+  </div>
+
+</div>
+
+<footer>
+  &copy; 2026 CompScience (Kinetic Inc.) &nbsp;·&nbsp;
+  <a href="https://compscience.com" target="_blank">compscience.com</a> &nbsp;·&nbsp;
+  <a href="mailto:cse@compscience.support">cse@compscience.support</a>
+</footer>
+
+<script>
+  function toggle(el) { el.parentElement.classList.toggle('open'); }
+</script>
+</body>
+</html>
