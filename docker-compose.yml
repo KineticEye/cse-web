@@ -3,14 +3,49 @@ networks:
     external: true
 
 services:
-  public-web:
-    image: nginx:alpine
-    container_name: public-web
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:latest
+    container_name: oauth2-proxy
+    restart: unless-stopped
+    networks:
+      - traefik-public
+    env_file:
+      - ./oauth.env
+    command:
+      - --provider=google
+      - --email-domain=compscience.com
+      - --upstream=http://web:80
+      - --http-address=0.0.0.0:4180
+      - --cookie-secure=true
+      - --cookie-domain=.compscience.support
+      - --whitelist-domain=.compscience.support
+      - --redirect-url=https://internal.compscience.support/oauth2/callback
+      - --skip-provider-button=true
+      - --pass-host-header=true
+      - --set-xauthrequest=true
+      - --pass-user-headers=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`internal.compscience.support`)"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.routers.web-secure.rule=Host(`internal.compscience.support`)"
+      - "traefik.http.routers.web-secure.entrypoints=websecure"
+      - "traefik.http.routers.web-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.web.loadbalancer.server.port=4180"
+    depends_on:
+      - web
+
+  web:
+    build: .
+    image: web:latest
+    container_name: web
     restart: unless-stopped
     networks:
       - traefik-public
     volumes:
-      - ./html:/usr/share/nginx/html:ro
+      - /home/alex/html:/usr/share/nginx/internal/alex:ro
+      - /home/sean/html:/usr/share/nginx/internal/sean:ro
+      - /home/tristan/html:/usr/share/nginx/internal/tristan:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.public-web.rule=Host(`compscience.support`)"
