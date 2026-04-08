@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset=UTF-8>
+  <title>Upload - CompScience Hosting</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #f8f9fa; color: #1a1a2e; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+    .card { background: white; border-radius: 14px; padding: 40px; max-width: 520px; width: 100%; margin: 24px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+    .logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; }
+    .logo span { color: #4fc3f7; }
+    h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .sub { color: #666; font-size: .9rem; margin-bottom: 28px; }
+    .sub a { color: #4fc3f7; text-decoration: none; }
+    .upload-label { display: block; border: 2px dashed #d0d7de; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; background: #fafafa; transition: all 0.2s; }
+    .upload-label:hover { border-color: #4fc3f7; background: #f0faff; }
+    .drop-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .drop-text { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .drop-sub { font-size: .85rem; color: #888; }
+    input[type=file] { display: none; }
+    .file-list { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .file-item { display: flex; align-items: center; justify-content: space-between; background: #f8f9fa; border-radius: 8px; padding: 10px 14px; font-size: .85rem; }
+    .file-name { font-weight: 600; }
+    .ok { color: #4caf50; } .err { color: #ef5350; } .pending { color: #888; }
+    .page-link { margin-top: 20px; padding: 12px; background: #f0faff; border-radius: 8px; font-size: .85rem; text-align: center; display: none; }
+    .page-link a { color: #4fc3f7; font-weight: 600; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class=card>
+  <div class=logo>Comp<span>Science</span> Hosting</div>
+  <h1>Hi USERNAME!</h1>
+  <p class=sub>Your page: <a href=https://internal.compscience.support/USERNAME/ target=_blank>internal.compscience.support/USERNAME/</a></p>
+  <label class=upload-label for=fi>
+    <div class=drop-icon>📁</div>
+    <div class=drop-text>Click to browse files</div>
+    <div class=drop-sub>HTML, images, PDFs - anything goes</div>
+  </label>
+  <input type=file id=fi multiple>
+  <div class=file-list id=fl></div>
+  <div class=page-link id=pl>Files uploaded! <a href=https://internal.compscience.support/USERNAME/ target=_blank>View your page</a></div>
+</div>
+<script>
+const fi=document.getElementById('fi'),fl=document.getElementById('fl'),pl=document.getElementById('pl');
+fi.addEventListener('change',()=>go(fi.files));
+async function go(files){
+  for(const f of files){
+    const d=document.createElement('div');
+    d.className='file-item';
+    d.innerHTML='<span class="file-name">'+f.name+'</span><span class="pending">Uploading...</span>';
+    fl.appendChild(d);
+    const s=d.querySelector('.pending');
+    try{
+      const fd=new FormData();
+      fd.append('file',f);
+      const r=await fetch('/upload/upload',{method:'POST',body:fd}),j=await r.json();
+      if(r.ok){s.textContent='✓ Done';s.className='ok';pl.style.display='block';}
+      else{s.textContent='✗ '+j.error;s.className='err';}
+    }catch(e){s.textContent='✗ Error';s.className='err';}
+  }
+}
+</script>
+</body>
+</html>
