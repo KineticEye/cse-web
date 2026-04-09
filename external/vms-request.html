@@ -515,60 +515,7 @@
       <p class="subtitle">Please review and accept our terms before we ship your device.</p>
 
       <div class="tos-container" id="tosScroller">
-        <div class="tos-title">
-          <h2>SafetyPulse VMS Terms of Service</h2>
-          <p>Version 1.0 | Effective Date: 2026-01-15</p>
-          <p>[SAMPLE TERMS - For Demonstration Purposes]</p>
-        </div>
-
-        <h3>1. Agreement to Terms</h3>
-        <p>By requesting and accepting delivery of a SafetyPulse Video Management System (VMS) device, you ("Customer," "you," or "your") agree to be bound by these Terms of Service ("Terms"). These Terms constitute a legally binding agreement between you and CompScience, Inc. doing business as SafetyPulse ("SafetyPulse," "we," "us," or "our").</p>
-        <p>If you are entering into these Terms on behalf of an organization, you represent and warrant that you have the authority to bind that organization to these Terms, and references to "you" and "your" shall refer to that organization.</p>
-
-        <h3>2. VMS Device and Services</h3>
-        <p><strong>2.1 Device Purpose:</strong> The SafetyPulse VMS is a network appliance designed to connect your existing security and safety cameras to the SafetyPulse cloud platform. The VMS enables video streaming, storage, and AI-powered safety monitoring services.</p>
-        <p><strong>2.2 Service Activation:</strong> The VMS must be connected to your local network and activated through the SafetyPulse platform. Services begin upon successful activation and your subscription to a SafetyPulse service plan.</p>
-        <p><strong>2.3 Ownership:</strong> SafetyPulse retains ownership of all VMS devices. The device is provided to you on a license basis for use solely in connection with SafetyPulse services during your active subscription period.</p>
-
-        <h3>3. Data Collection and Privacy</h3>
-        <p><strong>3.1 Video Data:</strong> The VMS will transmit video feeds from your connected cameras to SafetyPulse's secure cloud infrastructure for processing, analysis, and storage.</p>
-        <p><strong>3.2 AI Processing:</strong> SafetyPulse uses artificial intelligence and machine learning algorithms to analyze video content for safety hazards, compliance monitoring, and incident detection. You consent to this automated processing of video data.</p>
-        <p><strong>3.3 Data Security:</strong> SafetyPulse implements industry-standard security measures to protect your data.</p>
-        <p><strong>3.4 Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, incorporated herein by reference.</p>
-
-        <h3>4. Customer Responsibilities</h3>
-        <p><strong>4.1 Network Requirements:</strong> You are responsible for providing and maintaining a suitable network environment, including adequate bandwidth, network security, and power supply for the VMS device.</p>
-        <p><strong>4.2 Authorized Use:</strong> You agree to use the VMS and SafetyPulse services only for lawful purposes and in compliance with all applicable laws.</p>
-        <p><strong>4.3 Employee Notice:</strong> If using the VMS in an employment context, you are solely responsible for providing appropriate notice to employees and obtaining any required consents for video monitoring.</p>
-        <p><strong>4.4 Physical Security:</strong> You must maintain physical security of the VMS device and prevent unauthorized access, tampering, or removal.</p>
-
-        <h3>5. Limitations of Liability</h3>
-        <p><strong>5.1 Service Limitations:</strong> SafetyPulse services are intended to supplement, not replace, your existing safety programs and procedures.</p>
-        <p><strong>5.2 No Emergency Response:</strong> SafetyPulse does not provide emergency response services.</p>
-        <p><strong>5.3 Limitation of Damages:</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, SAFETYPULSE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM THESE TERMS OR THE SERVICES.</p>
-        <p><strong>5.4 Cap on Liability:</strong> SafetyPulse's total aggregate liability shall not exceed the amount paid by you in the twelve (12) months preceding the event giving rise to liability.</p>
-
-        <h3>6. Warranties and Disclaimers</h3>
-        <p><strong>6.1 Device Warranty:</strong> SafetyPulse warrants that the VMS device will be free from material defects for one (1) year from the date of shipment.</p>
-        <p><strong>6.2 Service Disclaimer:</strong> EXCEPT AS EXPRESSLY PROVIDED, SAFETYPULSE PROVIDES THE VMS DEVICE AND SERVICES "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND.</p>
-
-        <h3>7. Term and Termination</h3>
-        <p><strong>7.1 Term:</strong> These Terms commence upon your acceptance and continue for as long as you maintain an active subscription or possess a VMS device.</p>
-        <p><strong>7.2 Termination:</strong> Either party may terminate upon thirty (30) days' written notice.</p>
-        <p><strong>7.3 Return of Device:</strong> Upon termination, you must promptly return the VMS device in good working condition.</p>
-
-        <h3>8. Governing Law</h3>
-        <p>These Terms shall be governed by the laws of the State of California. Disputes shall be resolved through binding arbitration.</p>
-
-        <h3>9. General Provisions</h3>
-        <p><strong>9.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and SafetyPulse regarding the subject matter hereof.</p>
-        <p><strong>9.2 Amendments:</strong> SafetyPulse reserves the right to modify these Terms at any time with notice.</p>
-        <p><strong>9.3 Contact:</strong> For questions, contact SafetyPulse at legal@safetypulse.com or CompScience, Inc., 650 California Street, Floor 7, San Francisco, CA 94108.</p>
-
-        <div style="background: var(--grey-100); border: 1px solid var(--grey-300); border-radius: 8px; padding: 16px; margin-top: 24px;">
-          <p style="font-weight: 600; margin-bottom: 8px;"><strong>Acknowledgment Required</strong></p>
-          <p>By checking the acceptance box and submitting this form, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.</p>
-        </div>
+        <p style="color: var(--grey-500); text-align: center; padding: 40px;">Loading Terms of Service…</p>
       </div>
 
       <div class="acceptance-box" id="acceptanceBox">
@@ -747,6 +694,16 @@
     document.getElementById('submitBtn').disabled = !this.checked;
   });
 
+  // Load ToS from separate file
+  fetch('/tos-vms-v1.html')
+    .then(r => r.ok ? r.text() : Promise.reject('Failed to load ToS'))
+    .then(html => { document.getElementById('tosScroller').innerHTML = html; })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('tosScroller').innerHTML =
+        '<p style="color:var(--danger);padding:20px">Unable to load Terms of Service. Please refresh the page.</p>';
+    });
+
   function val(id) { return document.getElementById(id).value.trim(); }
 
   function generateId() {
@@ -755,7 +712,7 @@
     return 'VMS-' + ts + '-' + r;
   }
 
-  function submitForm() {
+  async function submitForm() {
     const confNum = generateId();
     const acceptanceId = 'VMS-ACC-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const now = new Date().toISOString();
@@ -783,8 +740,17 @@
       },
     };
 
-    console.log('VMS Device Request Submitted:', submittedData);
-    localStorage.setItem('vms_latest_request', JSON.stringify(submittedData));
+    // Persist to backend
+    try {
+      const resp = await fetch('/api/vms-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submittedData),
+      });
+      if (!resp.ok) console.error('Failed to save request:', resp.status);
+    } catch (err) {
+      console.error('Failed to save request:', err);
+    }
 
     // Fill confirmation page
     document.getElementById('confNumber').textContent = confNum;
