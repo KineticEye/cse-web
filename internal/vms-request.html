@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VMS Device Request - CompScience</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-green: #00C57B;
+      --dark-green: #009960;
+      --green-600: #01B16F;
+      --green-50: #dcfef3;
+      --blue-midnight: #01232C;
+      --black: #1A1A1A;
+      --grey-800: #262626;
+      --grey-700: #3D3D3D;
+      --grey-600: #4E4E4E;
+      --grey-500: #949899;
+      --grey-400: #C6CBCC;
+      --grey-300: #E1E5E5;
+      --grey-200: #EDF1F2;
+      --grey-100: #F8F9FA;
+      --danger: #FF1F1F;
+      --info-blue: #365AC7;
+      --success-dark: #079026;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Spline Sans", sans-serif;
+      font-size: 14px;
+      color: var(--black);
+      background: white;
+      min-height: 100vh;
+    }
+
+    .form-container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .step { display: none; }
+    .step.active { display: block; }
+
+    h1 {
+      font-size: 40px;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--grey-800);
+      margin-bottom: 16px;
+    }
+    h1 span { color: var(--brand-green); }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--grey-600);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .fields { display: flex; flex-direction: column; gap: 16px; }
+
+    .field-row {
+      display: grid;
+      gap: 16px;
+    }
+    .field-row.cols-2 { grid-template-columns: 2fr 1fr; }
+
+    input, select, textarea {
+      width: 100%;
+      height: 56px;
+      padding: 16px 20px;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      font-family: "Spline Sans", sans-serif;
+      font-size: 16px;
+      color: var(--grey-800);
+      outline: none;
+      background: white;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--brand-green);
+    }
+    input.error, select.error, textarea.error {
+      border-color: var(--danger);
+    }
+
+    textarea { height: auto; resize: vertical; }
+
+    select { cursor: pointer; }
+
+    .error-msg {
+      font-size: 14px;
+      color: var(--danger);
+      margin-top: 4px;
+    }
+
+    .section-divider {
+      padding-top: 24px;
+      margin-top: 24px;
+      border-top: 1px solid var(--grey-200);
+    }
+
+    .section-divider h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--grey-800);
+      margin-bottom: 16px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      height: 56px;
+      padding: 16px 32px;
+      border-radius: 100px;
+      border: none;
+      font-family: "Spline Sans", sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      flex: 1;
+      background: var(--brand-green);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--green-600);
+      transform: translateY(-2px);
+    }
+    .btn-primary:disabled {
+      background: var(--grey-300);
+      cursor: not-allowed;
+      opacity: 0.6;
+      transform: none;
+    }
+    .btn-back {
+      background: var(--grey-200);
+      color: var(--grey-700);
+    }
+    .btn-back:hover { background: var(--grey-300); }
+    .btn-secondary {
+      flex: 1;
+      height: 56px;
+      padding: 16px 32px;
+      border-radius: 100px;
+      border: 1px solid var(--brand-green);
+      background: transparent;
+      color: var(--brand-green);
+      font-family: "Spline Sans", sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: var(--green-50); }
+
+    /* ToS */
+    .tos-container {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 24px;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      background: var(--grey-100);
+      margin-bottom: 24px;
+    }
+    .tos-container h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--grey-800);
+      margin: 24px 0 12px;
+    }
+    .tos-container h3:first-child { margin-top: 0; }
+    .tos-container p {
+      font-size: 14px;
+      color: var(--grey-700);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .tos-container .tos-title {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .tos-container .tos-title h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--grey-800);
+      margin-bottom: 4px;
+    }
+    .tos-container .tos-title p {
+      font-size: 12px;
+      color: var(--grey-500);
+      font-style: italic;
+    }
+
+    .acceptance-box {
+      padding: 20px;
+      border: 2px solid var(--grey-300);
+      border-radius: 8px;
+      background: white;
+      transition: all 0.2s;
+    }
+    .acceptance-box.ready {
+      border-color: var(--brand-green);
+      background: var(--green-50);
+    }
+    .acceptance-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .acceptance-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: var(--brand-green);
+      flex-shrink: 0;
+    }
+    .acceptance-label .label-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--grey-800);
+      line-height: 1.5;
+    }
+    .acceptance-label .label-sub {
+      font-size: 12px;
+      color: var(--grey-600);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .scroll-hint {
+      font-size: 12px;
+      color: var(--info-blue);
+      margin-top: 12px;
+    }
+
+    /* Confirmation */
+    .confirmation { text-align: center; }
+    .confirmation .check-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: var(--green-50);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .confirmation .check-icon svg { color: var(--success-dark); }
+
+    .conf-number {
+      display: inline-block;
+      padding: 20px 40px;
+      background: var(--green-50);
+      border: 2px solid var(--brand-green);
+      border-radius: 100px;
+      margin-bottom: 48px;
+    }
+    .conf-number .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey-600);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .conf-number .number {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--grey-800);
+      font-family: monospace;
+    }
+
+    .next-steps { text-align: left; margin-bottom: 48px; }
+    .next-steps h2 {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--grey-800);
+      margin-bottom: 24px;
+    }
+    .next-steps h2 span { color: var(--brand-green); }
+
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .step-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--brand-green);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-item h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--grey-800);
+      margin-bottom: 8px;
+    }
+    .step-item p {
+      font-size: 15px;
+      color: var(--grey-600);
+      line-height: 1.6;
+    }
+
+    .summary-box {
+      padding: 32px;
+      background: var(--grey-100);
+      border: 1px solid var(--grey-300);
+      border-radius: 12px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .summary-box h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--grey-800);
+      margin-bottom: 24px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .summary-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--grey-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .summary-section p {
+      font-size: 15px;
+      color: var(--grey-800);
+      line-height: 1.7;
+    }
+
+    .support-footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--grey-200);
+    }
+    .support-footer p {
+      font-size: 15px;
+      color: var(--grey-600);
+      line-height: 1.6;
+    }
+    .support-footer a {
+      color: var(--brand-green);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* Progress bar */
+    .progress {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+    .progress-dot {
+      height: 4px;
+      flex: 1;
+      border-radius: 2px;
+      background: var(--grey-200);
+      transition: background 0.3s;
+    }
+    .progress-dot.active { background: var(--brand-green); }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 28px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .field-row.cols-2 { grid-template-columns: 1fr; }
+      .btn-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <div class="progress">
+    <div class="progress-dot active" id="prog1"></div>
+    <div class="progress-dot" id="prog2"></div>
+    <div class="progress-dot" id="prog3"></div>
+  </div>
+
+  <form id="vmsForm" novalidate>
+    <!-- Step 1: Contact Information -->
+    <div class="step active" id="step1">
+      <h1>First we need to know some of the <span>key contacts</span>...</h1>
+      <p class="subtitle">Someone we can share device details with. They are responsible for receiving the shipment.</p>
+
+      <div class="fields">
+        <div>
+          <input type="text" id="firstName" placeholder="First name" required>
+          <div class="error-msg" id="err-firstName"></div>
+        </div>
+        <div>
+          <input type="text" id="lastName" placeholder="Last name" required>
+          <div class="error-msg" id="err-lastName"></div>
+        </div>
+        <div>
+          <input type="email" id="email" placeholder="Email address" required>
+          <div class="error-msg" id="err-email"></div>
+        </div>
+        <div>
+          <input type="tel" id="phone" placeholder="Phone number" required>
+          <div class="error-msg" id="err-phone"></div>
+        </div>
+        <div>
+          <input type="text" id="company" placeholder="Company / Organization" required>
+          <div class="error-msg" id="err-company"></div>
+        </div>
+        <div>
+          <input type="text" id="jobTitle" placeholder="Job Title / Role" required>
+          <div class="error-msg" id="err-jobTitle"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" onclick="goToStep(2)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Shipping & Site -->
+    <div class="step" id="step2">
+      <h1>Where should we send your <span>VMS Device</span>?</h1>
+      <p class="subtitle">Tell us about your installation site and shipping details.</p>
+
+      <div class="fields">
+        <div>
+          <input type="text" id="street" placeholder="Street address" required>
+          <div class="error-msg" id="err-street"></div>
+        </div>
+        <div>
+          <input type="text" id="suite" placeholder="Suite / Unit (Optional)">
+        </div>
+        <div class="field-row cols-2">
+          <div>
+            <input type="text" id="city" placeholder="City" required>
+            <div class="error-msg" id="err-city"></div>
+          </div>
+          <div>
+            <input type="text" id="state" placeholder="State" required>
+            <div class="error-msg" id="err-state"></div>
+          </div>
+        </div>
+        <div>
+          <input type="text" id="zip" placeholder="ZIP code" required>
+          <div class="error-msg" id="err-zip"></div>
+        </div>
+        <div>
+          <input type="text" id="country" placeholder="Country" required value="United States">
+          <div class="error-msg" id="err-country"></div>
+        </div>
+
+        <div class="section-divider">
+          <h2>Installation Site Details</h2>
+          <div class="fields">
+            <div>
+              <input type="text" id="siteName" placeholder="Site name (e.g., Main Office, Warehouse B)" required>
+              <div class="error-msg" id="err-siteName"></div>
+            </div>
+            <div>
+              <input type="number" id="cameraCount" placeholder="Number of cameras" min="1" required>
+              <div class="error-msg" id="err-cameraCount"></div>
+            </div>
+            <div>
+              <select id="networkEnvironment" required>
+                <option value="">Select network type</option>
+                <option>Managed corporate network</option>
+                <option>Basic office/retail network</option>
+                <option>Construction site / temporary network</option>
+                <option>Not sure</option>
+              </select>
+              <div class="error-msg" id="err-networkEnvironment"></div>
+            </div>
+            <div>
+              <textarea id="specialInstructions" placeholder="Special delivery instructions (optional)" rows="4"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-back" onclick="goToStep(1)">Back</button>
+        <button type="button" class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Terms of Service -->
+    <div class="step" id="step3">
+      <h1>One last thing, our <span>Terms of Service</span>.</h1>
+      <p class="subtitle">Please review and accept our terms before we ship your device.</p>
+
+      <div class="tos-container" id="tosScroller">
+        <div class="tos-title">
+          <h2>SafetyPulse VMS Terms of Service</h2>
+          <p>Version 1.0 | Effective Date: 2026-01-15</p>
+          <p>[SAMPLE TERMS - For Demonstration Purposes]</p>
+        </div>
+
+        <h3>1. Agreement to Terms</h3>
+        <p>By requesting and accepting delivery of a SafetyPulse Video Management System (VMS) device, you ("Customer," "you," or "your") agree to be bound by these Terms of Service ("Terms"). These Terms constitute a legally binding agreement between you and CompScience, Inc. doing business as SafetyPulse ("SafetyPulse," "we," "us," or "our").</p>
+        <p>If you are entering into these Terms on behalf of an organization, you represent and warrant that you have the authority to bind that organization to these Terms, and references to "you" and "your" shall refer to that organization.</p>
+
+        <h3>2. VMS Device and Services</h3>
+        <p><strong>2.1 Device Purpose:</strong> The SafetyPulse VMS is a network appliance designed to connect your existing security and safety cameras to the SafetyPulse cloud platform. The VMS enables video streaming, storage, and AI-powered safety monitoring services.</p>
+        <p><strong>2.2 Service Activation:</strong> The VMS must be connected to your local network and activated through the SafetyPulse platform. Services begin upon successful activation and your subscription to a SafetyPulse service plan.</p>
+        <p><strong>2.3 Ownership:</strong> SafetyPulse retains ownership of all VMS devices. The device is provided to you on a license basis for use solely in connection with SafetyPulse services during your active subscription period.</p>
+
+        <h3>3. Data Collection and Privacy</h3>
+        <p><strong>3.1 Video Data:</strong> The VMS will transmit video feeds from your connected cameras to SafetyPulse's secure cloud infrastructure for processing, analysis, and storage.</p>
+        <p><strong>3.2 AI Processing:</strong> SafetyPulse uses artificial intelligence and machine learning algorithms to analyze video content for safety hazards, compliance monitoring, and incident detection. You consent to this automated processing of video data.</p>
+        <p><strong>3.3 Data Security:</strong> SafetyPulse implements industry-standard security measures to protect your data.</p>
+        <p><strong>3.4 Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, incorporated herein by reference.</p>
+
+        <h3>4. Customer Responsibilities</h3>
+        <p><strong>4.1 Network Requirements:</strong> You are responsible for providing and maintaining a suitable network environment, including adequate bandwidth, network security, and power supply for the VMS device.</p>
+        <p><strong>4.2 Authorized Use:</strong> You agree to use the VMS and SafetyPulse services only for lawful purposes and in compliance with all applicable laws.</p>
+        <p><strong>4.3 Employee Notice:</strong> If using the VMS in an employment context, you are solely responsible for providing appropriate notice to employees and obtaining any required consents for video monitoring.</p>
+        <p><strong>4.4 Physical Security:</strong> You must maintain physical security of the VMS device and prevent unauthorized access, tampering, or removal.</p>
+
+        <h3>5. Limitations of Liability</h3>
+        <p><strong>5.1 Service Limitations:</strong> SafetyPulse services are intended to supplement, not replace, your existing safety programs and procedures.</p>
+        <p><strong>5.2 No Emergency Response:</strong> SafetyPulse does not provide emergency response services.</p>
+        <p><strong>5.3 Limitation of Damages:</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, SAFETYPULSE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM THESE TERMS OR THE SERVICES.</p>
+        <p><strong>5.4 Cap on Liability:</strong> SafetyPulse's total aggregate liability shall not exceed the amount paid by you in the twelve (12) months preceding the event giving rise to liability.</p>
+
+        <h3>6. Warranties and Disclaimers</h3>
+        <p><strong>6.1 Device Warranty:</strong> SafetyPulse warrants that the VMS device will be free from material defects for one (1) year from the date of shipment.</p>
+        <p><strong>6.2 Service Disclaimer:</strong> EXCEPT AS EXPRESSLY PROVIDED, SAFETYPULSE PROVIDES THE VMS DEVICE AND SERVICES "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND.</p>
+
+        <h3>7. Term and Termination</h3>
+        <p><strong>7.1 Term:</strong> These Terms commence upon your acceptance and continue for as long as you maintain an active subscription or possess a VMS device.</p>
+        <p><strong>7.2 Termination:</strong> Either party may terminate upon thirty (30) days' written notice.</p>
+        <p><strong>7.3 Return of Device:</strong> Upon termination, you must promptly return the VMS device in good working condition.</p>
+
+        <h3>8. Governing Law</h3>
+        <p>These Terms shall be governed by the laws of the State of California. Disputes shall be resolved through binding arbitration.</p>
+
+        <h3>9. General Provisions</h3>
+        <p><strong>9.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and SafetyPulse regarding the subject matter hereof.</p>
+        <p><strong>9.2 Amendments:</strong> SafetyPulse reserves the right to modify these Terms at any time with notice.</p>
+        <p><strong>9.3 Contact:</strong> For questions, contact SafetyPulse at legal@safetypulse.com or CompScience, Inc., 650 California Street, Floor 7, San Francisco, CA 94108.</p>
+
+        <div style="background: var(--grey-100); border: 1px solid var(--grey-300); border-radius: 8px; padding: 16px; margin-top: 24px;">
+          <p style="font-weight: 600; margin-bottom: 8px;"><strong>Acknowledgment Required</strong></p>
+          <p>By checking the acceptance box and submitting this form, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.</p>
+        </div>
+      </div>
+
+      <div class="acceptance-box" id="acceptanceBox">
+        <label class="acceptance-label">
+          <input type="checkbox" id="tosAccepted" disabled>
+          <div>
+            <div class="label-text">I have read and agree to the Terms of Service</div>
+            <div class="label-sub">By checking this box, you accept version 1.0 (Effective: 2026-01-15) on behalf of <span id="companyEcho">your organization</span>.</div>
+          </div>
+        </label>
+        <div class="scroll-hint" id="scrollHint">Please scroll to the bottom of the Terms of Service to enable acceptance</div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-back" onclick="goToStep(2)">Back</button>
+        <button type="button" class="btn btn-primary" id="submitBtn" disabled onclick="submitForm()">Submit Request</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Step 4: Confirmation -->
+  <div class="step" id="step4">
+    <div class="confirmation">
+      <div class="check-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h1>Request <span>Submitted</span>!</h1>
+      <p class="subtitle">Your VMS device request has been received and is being processed.</p>
+
+      <div class="conf-number">
+        <div class="label">Confirmation Number</div>
+        <div class="number" id="confNumber"></div>
+      </div>
+    </div>
+
+    <div class="next-steps">
+      <h2>What <span>Happens Next</span>?</h2>
+
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Verify Your Email Address</h3>
+          <p>Check <strong id="confEmail"></strong> for a verification link. You must verify your email before we can process your order.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div>
+          <h3>Order Confirmation</h3>
+          <p>After email verification, you'll receive a full order confirmation with device specifications and expected timeline.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Device Preparation</h3>
+          <p>Our team will configure your VMS device for your specific site and camera setup. This typically takes 1-2 business days.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div>
+          <h3>Shipping & Tracking</h3>
+          <p>Your device will be shipped to <span id="confLocation"></span>. You'll receive tracking information via email. Estimated delivery: 3-5 business days.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">5</div>
+        <div>
+          <h3>Installation Support</h3>
+          <p>Once you receive the device, our technical team will guide you through the installation and camera connection setup.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <h2>Request Summary</h2>
+      <div class="summary-grid">
+        <div class="summary-section">
+          <h3>Contact</h3>
+          <p id="summaryContact"></p>
+        </div>
+        <div class="summary-section">
+          <h3>Shipping Address</h3>
+          <p id="summaryShipping"></p>
+        </div>
+        <div class="summary-section">
+          <h3>Site Details</h3>
+          <p id="summarySite"></p>
+        </div>
+        <div class="summary-section">
+          <h3>Terms Accepted</h3>
+          <p id="summaryTos"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-secondary" onclick="downloadSummary()">Download Summary</button>
+      <button type="button" class="btn btn-primary" onclick="location.reload()">Submit Another Request</button>
+    </div>
+
+    <div class="support-footer">
+      <p>Questions about your order?<br>
+        Contact us at <a href="mailto:cse@compscience.support">cse@compscience.support</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentStep = 1;
+  let hasScrolledToBottom = false;
+  let submittedData = null;
+
+  const fields = {
+    1: ['firstName', 'lastName', 'email', 'phone', 'company', 'jobTitle'],
+    2: ['street', 'city', 'state', 'zip', 'country', 'siteName', 'cameraCount', 'networkEnvironment'],
+  };
+
+  function validate(step) {
+    let valid = true;
+    for (const id of fields[step] || []) {
+      const el = document.getElementById(id);
+      const err = document.getElementById('err-' + id);
+      if (!el || !err) continue;
+      const val = el.value.trim();
+      let msg = '';
+      if (!val) {
+        msg = el.placeholder + ' is required';
+      } else if (id === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        msg = 'Invalid email address';
+      } else if (id === 'cameraCount' && (isNaN(val) || Number(val) < 1)) {
+        msg = 'Must have at least 1 camera';
+      }
+      if (msg) {
+        el.classList.add('error');
+        err.textContent = msg;
+        valid = false;
+      } else {
+        el.classList.remove('error');
+        err.textContent = '';
+      }
+    }
+    return valid;
+  }
+
+  function goToStep(step) {
+    if (step > currentStep && !validate(currentStep)) return;
+    document.getElementById('step' + currentStep).classList.remove('active');
+    document.getElementById('step' + step).classList.add('active');
+    currentStep = step;
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById('prog' + i).classList.toggle('active', i <= step);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (step === 3) {
+      const company = document.getElementById('company').value.trim();
+      document.getElementById('companyEcho').textContent = company || 'your organization';
+    }
+  }
+
+  // ToS scroll detection
+  document.getElementById('tosScroller').addEventListener('scroll', function () {
+    if (hasScrolledToBottom) return;
+    if (this.scrollHeight - this.scrollTop <= this.clientHeight + 10) {
+      hasScrolledToBottom = true;
+      document.getElementById('tosAccepted').disabled = false;
+      document.getElementById('acceptanceBox').classList.add('ready');
+      document.getElementById('scrollHint').style.display = 'none';
+    }
+  });
+
+  document.getElementById('tosAccepted').addEventListener('change', function () {
+    document.getElementById('submitBtn').disabled = !this.checked;
+  });
+
+  function val(id) { return document.getElementById(id).value.trim(); }
+
+  function generateId() {
+    const ts = Date.now().toString(36).toUpperCase();
+    const r = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return 'VMS-' + ts + '-' + r;
+  }
+
+  function submitForm() {
+    const confNum = generateId();
+    const acceptanceId = 'VMS-ACC-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const now = new Date().toISOString();
+
+    submittedData = {
+      confirmationNumber: confNum,
+      submittedAt: now,
+      contact: {
+        firstName: val('firstName'), lastName: val('lastName'),
+        email: val('email'), phone: val('phone'),
+        company: val('company'), jobTitle: val('jobTitle'),
+      },
+      shipping: {
+        street: val('street'), suite: val('suite'),
+        city: val('city'), state: val('state'),
+        zip: val('zip'), country: val('country'),
+        siteName: val('siteName'), cameraCount: Number(val('cameraCount')),
+        networkEnvironment: val('networkEnvironment'),
+        specialInstructions: val('specialInstructions'),
+      },
+      tosAcceptance: {
+        accepted: true, tosVersion: '1.0', tosEffectiveDate: '2026-01-15',
+        acceptedAt: now, acceptedByName: val('firstName') + ' ' + val('lastName'),
+        acceptedByEmail: val('email'), acceptanceId: acceptanceId,
+      },
+    };
+
+    console.log('VMS Device Request Submitted:', submittedData);
+    localStorage.setItem('vms_latest_request', JSON.stringify(submittedData));
+
+    // Fill confirmation page
+    document.getElementById('confNumber').textContent = confNum;
+    document.getElementById('confEmail').textContent = submittedData.contact.email;
+    document.getElementById('confLocation').textContent = submittedData.shipping.city + ', ' + submittedData.shipping.state;
+
+    const c = submittedData.contact;
+    document.getElementById('summaryContact').innerHTML =
+      '<strong>' + c.firstName + ' ' + c.lastName + '</strong><br>' +
+      c.jobTitle + '<br>' + c.company + '<br>' + c.email + '<br>' + c.phone;
+
+    const s = submittedData.shipping;
+    document.getElementById('summaryShipping').innerHTML =
+      s.street + (s.suite ? ', ' + s.suite : '') + '<br>' +
+      s.city + ', ' + s.state + ' ' + s.zip + '<br>' + s.country;
+
+    document.getElementById('summarySite').innerHTML =
+      '<strong>Site:</strong> ' + s.siteName + '<br>' +
+      '<strong>Cameras:</strong> ' + s.cameraCount + '<br>' +
+      '<strong>Network:</strong> ' + s.networkEnvironment;
+
+    const fmtDate = new Date(now).toLocaleString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', timeZone: 'UTC', timeZoneName: 'short',
+    });
+    document.getElementById('summaryTos').innerHTML =
+      '<strong style="color:var(--success-dark)">Accepted</strong><br>' +
+      'Version 1.0<br>' + fmtDate + '<br>' +
+      '<span style="font-family:monospace;font-size:12px">' + acceptanceId + '</span>';
+
+    // Show confirmation
+    document.getElementById('step3').classList.remove('active');
+    document.getElementById('step4').classList.add('active');
+    document.querySelector('.progress').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function downloadSummary() {
+    if (!submittedData) return;
+    const blob = new Blob([JSON.stringify(submittedData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vms-request-' + submittedData.confirmationNumber + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>

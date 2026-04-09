@@ -1,5 +1,54 @@
 <!DOCTYPE html>
-<html>
-<head><title>Hello</title></head>
-<body><h1>It works!</h1></body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompScience Internal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-green: #00C57B;
+      --blue-midnight: #01232C;
+      --grey-100: #F8F9FA;
+      --grey-300: #E1E5E5;
+      --grey-500: #949899;
+      --grey-600: #4E4E4E;
+      --black: #1A1A1A;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Spline Sans", sans-serif; background: var(--grey-100); color: var(--black); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { max-width: 480px; padding: 40px 24px; text-align: center; }
+    h1 { font-size: 24px; font-weight: 600; color: var(--blue-midnight); margin-bottom: 8px; }
+    p { font-size: 14px; color: var(--grey-500); margin-bottom: 32px; }
+    .links { display: flex; flex-direction: column; gap: 12px; }
+    a {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 24px; border: 1px solid var(--grey-300); border-radius: 8px;
+      background: white; text-decoration: none; font-size: 14px; font-weight: 500;
+      color: var(--grey-600); transition: all 0.2s;
+    }
+    a:hover { border-color: var(--brand-green); color: var(--brand-green); }
+    a svg { flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CompScience Internal</h1>
+    <p>Internal tools and resources</p>
+    <div class="links">
+      <a href="/vms-request.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/></svg>
+        VMS Device Request Form
+      </a>
+      <a href="/dashboard/">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Dashboard
+      </a>
+      <a href="/upload">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        File Upload
+      </a>
+    </div>
+  </div>
+</body>
 </html>
