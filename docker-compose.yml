@@ -61,3 +61,7 @@ services:
     restart: unless-stopped
     networks:
       - traefik-public
+    volumes:
+      - /home/alex/html:/uploads/alex
+      - /home/sean/html:/uploads/sean
+      - /home/tristan/html:/uploads/tristan
