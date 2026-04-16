@@ -108,6 +108,7 @@ function renderTable(rows) {
         <th>Submitted</th>
         <th>Confirmation #</th>
         <th>Status</th>
+        <th>Verified</th>
         <th>Company</th>
         <th>Contact</th>
         <th>Email</th>
@@ -127,6 +128,7 @@ function renderTable(rows) {
         <td>${esc(fmtDate(r.submitted_at))}</td>
         <td class="num">${esc(r.confirmation_number)}</td>
         <td><span class="${statusClass}">${esc(r.status || '—')}</span></td>
+        <td>${r.email_verified_at ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>' : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>'}</td>
         <td>${esc(r.company)}</td>
         <td>${esc([r.first_name, r.last_name].filter(Boolean).join(' ') || '—')}<br><span class="muted">${esc(r.job_title || '')}</span></td>
         <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
