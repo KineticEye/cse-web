@@ -38,6 +38,8 @@
     .muted { color: var(--grey-500); }
     .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; background: var(--grey-100); color: var(--grey-600); border: 1px solid var(--grey-300); }
     .pill.pending { background: #FFF8E5; color: #8A6D00; border-color: #F6E6A3; }
+    .pill.task-pending { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
+    .pill.task-done { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
 
     .empty, .error { padding: 40px; text-align: center; color: var(--grey-500); font-size: 14px; }
     .error { color: #991B1B; }
@@ -56,6 +58,8 @@
     .btn-danger:hover { background: #FEE2E2; border-color: #EF4444; color: #991B1B; }
     .hs-link { font-size: 12px; color: var(--brand-green); text-decoration: none; }
     .hs-link:hover { text-decoration: underline; }
+    .linear-link { font-size: 12px; color: #5E6AD2; text-decoration: none; font-family: "SFMono-Regular", Menlo, monospace; }
+    .linear-link:hover { text-decoration: underline; }
     .hs-input { width: 180px; padding: 4px 8px; border: 1px solid var(--grey-300); border-radius: 5px; font-size: 12px; font-family: inherit; }
     .hs-input:focus { outline: none; border-color: var(--brand-green); }
 
@@ -80,7 +84,10 @@
         <h1>VMS Device Requests</h1>
         <p class="sub">Submissions from compscience.support/vms-request</p>
       </div>
-      <a class="back" href="/">&larr; Internal home</a>
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="btn-sm" id="refreshTasksBtn" title="Re-check HubSpot for every task-pending row">Refresh task status</button>
+        <a class="back" href="/">&larr; Internal home</a>
+      </div>
     </header>
 
     <div class="status-bar" id="statusBar">
@@ -118,6 +125,18 @@ function extractHsContactId(input) {
 
 function hsUrl(contactId) {
   return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-1/${contactId}`;
+}
+
+function linearIdentFromUrl(url) {
+  if (!url) return null;
+  const m = url.match(/\/issue\/([A-Z]+-\d+)/);
+  return m ? m[1] : null;
+}
+
+function renderLinearCell(r) {
+  if (!r.linear_issue_url) return '<span class="muted">—</span>';
+  const ident = linearIdentFromUrl(r.linear_issue_url) || 'open';
+  return `<a class="linear-link" href="${esc(r.linear_issue_url)}" target="_blank" title="Open in Linear">${esc(ident)}</a>`;
 }
 
 function renderStatus(rows) {
@@ -158,6 +177,7 @@ function renderTable(rows) {
         <th>Status</th>
         <th>Verified</th>
         <th>HubSpot</th>
+        <th>Linear</th>
         <th>Company</th>
         <th>Contact</th>
         <th>Email</th>
@@ -169,7 +189,8 @@ function renderTable(rows) {
     </thead>
   `;
   const body = rows.map(r => {
-    const statusClass = (r.status || '').toLowerCase() === 'pending' ? 'pill pending' : 'pill';
+    const statusKey = (r.status || '').toLowerCase();
+    const statusClass = statusKey ? `pill ${statusKey}` : 'pill';
     return `
       <tr id="row-${esc(r.confirmation_number)}">
         <td>${esc(fmtDate(r.submitted_at))}</td>
@@ -177,6 +198,7 @@ function renderTable(rows) {
         <td><span class="${statusClass}">${esc(r.status || '—')}</span></td>
         <td>${r.email_verified_at ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>' : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>'}</td>
         <td>${renderHsCell(r)}</td>
+        <td>${renderLinearCell(r)}</td>
         <td>${esc(r.company)}</td>
         <td>${esc([r.first_name, r.last_name].filter(Boolean).join(' ') || '—')}<br><span class="muted">${esc(r.job_title || '')}</span></td>
         <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
@@ -273,6 +295,27 @@ function confirmDelete(confNum, company) {
   };
 }
 
+// ── Refresh task status ───────────────────────────────────────────────────
+async function refreshTasks() {
+  const btn = document.getElementById('refreshTasksBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Checking HubSpot…';
+  try {
+    const res = await fetch(`${API_BASE}/reconcile-tasks`, { method: 'POST' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const summary = await res.json();
+    await load();
+    btn.textContent = summary.changed_count
+      ? `${summary.changed_count} moved to task-done`
+      : `Checked ${summary.checked} · no changes`;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2500);
+  } catch (e) {
+    btn.textContent = 'Refresh failed';
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2500);
+  }
+}
+
 // ── Initial load ──────────────────────────────────────────────────────────
 async function load() {
   try {
@@ -288,6 +331,7 @@ async function load() {
   }
 }
 
+document.getElementById('refreshTasksBtn').addEventListener('click', refreshTasks);
 load();
 </script>
 </body>
