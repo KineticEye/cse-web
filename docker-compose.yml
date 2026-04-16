@@ -43,10 +43,7 @@ services:
     networks:
       - traefik-public
     env_file:
-      # Must define PROXY_API_KEY (same value cse-platform uses). Injected
-      # into nginx.conf.template at container start via envsubst so the
-      # internal /api/vms-requests proxy can authenticate to cse-platform.
-      - ./web.env
+      - .env
     volumes:
       - /home/alex/html:/usr/share/nginx/internal/alex:ro
       - /home/sean/html:/usr/share/nginx/internal/sean:ro
