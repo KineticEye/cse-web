@@ -13,6 +13,18 @@ server {
         client_max_body_size 50m;
     }
 
+    # Admin read-only access to vms_requests — oauth2-proxy already gates
+    # this server block, so any caller reaching nginx is an authenticated
+    # @compscience.com user. PROXY_API_KEY is injected server-side via
+    # envsubst at container start, so the browser never sees it.
+    location = /api/vms-requests {
+        proxy_pass http://cse-platform:8000/v1/vms-requests;
+        proxy_set_header Authorization "Bearer ${PROXY_API_KEY}";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
     location / {
         root /usr/share/nginx/internal;
         index index.html index.htm;

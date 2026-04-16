@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VMS Requests · CompScience Internal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-green: #00C57B;
+      --blue-midnight: #01232C;
+      --grey-100: #F8F9FA;
+      --grey-300: #E1E5E5;
+      --grey-500: #949899;
+      --grey-600: #4E4E4E;
+      --black: #1A1A1A;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Spline Sans", sans-serif; background: var(--grey-100); color: var(--black); padding: 32px 24px; }
+    .wrap { max-width: 1400px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--blue-midnight); }
+    .sub { font-size: 13px; color: var(--grey-500); }
+    .back { font-size: 13px; color: var(--grey-600); text-decoration: none; }
+    .back:hover { color: var(--brand-green); }
+
+    .status-bar { background: white; border: 1px solid var(--grey-300); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; gap: 24px; font-size: 13px; flex-wrap: wrap; }
+    .status-bar span strong { color: var(--blue-midnight); font-weight: 600; }
+
+    .table-wrap { background: white; border: 1px solid var(--grey-300); border-radius: 8px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--grey-300); white-space: nowrap; vertical-align: top; }
+    th { background: var(--grey-100); color: var(--grey-600); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; position: sticky; top: 0; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFBFB; }
+    td.num { font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; color: var(--grey-600); }
+    td.wrap-cell { white-space: normal; max-width: 280px; }
+    .muted { color: var(--grey-500); }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; background: var(--grey-100); color: var(--grey-600); border: 1px solid var(--grey-300); }
+    .pill.pending { background: #FFF8E5; color: #8A6D00; border-color: #F6E6A3; }
+
+    .empty, .error { padding: 40px; text-align: center; color: var(--grey-500); font-size: 14px; }
+    .error { color: #991B1B; }
+
+    details.row-details summary { cursor: pointer; color: var(--grey-500); font-size: 12px; }
+    details.row-details summary:hover { color: var(--brand-green); }
+    details.row-details[open] summary { margin-bottom: 8px; }
+    .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 12px; margin-top: 6px; }
+    .kv dt { color: var(--grey-500); }
+    .kv dd { color: var(--black); word-break: break-word; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>VMS Device Requests</h1>
+        <p class="sub">Submissions from compscience.support/vms-request</p>
+      </div>
+      <a class="back" href="/">&larr; Internal home</a>
+    </header>
+
+    <div class="status-bar" id="statusBar">
+      <span>Loading&hellip;</span>
+    </div>
+
+    <div class="table-wrap" id="tableWrap">
+      <div class="empty">Loading requests&hellip;</div>
+    </div>
+  </div>
+
+<script>
+const API = '/api/vms-requests?limit=500';
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderStatus(rows) {
+  const byStatus = rows.reduce((acc, r) => {
+    const k = r.status || 'unknown';
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+  const parts = [`<span><strong>${rows.length}</strong> total</span>`];
+  for (const [k, v] of Object.entries(byStatus)) {
+    parts.push(`<span><strong>${v}</strong> ${esc(k)}</span>`);
+  }
+  document.getElementById('statusBar').innerHTML = parts.join('');
+}
+
+function renderTable(rows) {
+  const wrap = document.getElementById('tableWrap');
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="empty">No VMS requests yet.</div>';
+    return;
+  }
+  const head = `
+    <thead>
+      <tr>
+        <th>Submitted</th>
+        <th>Confirmation #</th>
+        <th>Status</th>
+        <th>Company</th>
+        <th>Contact</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Cameras</th>
+        <th>Site</th>
+        <th>City, State</th>
+        <th>ToS</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+  `;
+  const body = rows.map(r => {
+    const statusClass = (r.status || '').toLowerCase() === 'pending' ? 'pill pending' : 'pill';
+    return `
+      <tr>
+        <td>${esc(fmtDate(r.submitted_at))}</td>
+        <td class="num">${esc(r.confirmation_number)}</td>
+        <td><span class="${statusClass}">${esc(r.status || '—')}</span></td>
+        <td>${esc(r.company)}</td>
+        <td>${esc([r.first_name, r.last_name].filter(Boolean).join(' ') || '—')}<br><span class="muted">${esc(r.job_title || '')}</span></td>
+        <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
+        <td>${esc(r.phone || '—')}</td>
+        <td>${esc(r.camera_count ?? '—')}</td>
+        <td>${esc(r.site_name || '—')}</td>
+        <td>${esc([r.city, r.state].filter(Boolean).join(', ') || '—')}</td>
+        <td class="num">${esc(r.tos_version || '—')}</td>
+        <td>
+          <details class="row-details">
+            <summary>More</summary>
+            <dl class="kv">
+              <dt>Street</dt><dd>${esc([r.street, r.suite].filter(Boolean).join(', '))}</dd>
+              <dt>ZIP / Country</dt><dd>${esc([r.zip, r.country].filter(Boolean).join(' · '))}</dd>
+              <dt>Network env</dt><dd>${esc(r.network_environment || '—')}</dd>
+              <dt>Special instructions</dt><dd>${esc(r.special_instructions || '—')}</dd>
+              <dt>ToS accepted at</dt><dd>${esc(fmtDate(r.tos_accepted_at))}</dd>
+              <dt>Acceptance ID</dt><dd class="num">${esc(r.acceptance_id || '—')}</dd>
+            </dl>
+          </details>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
+}
+
+async function load() {
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    // Most recent first
+    rows.sort((a, b) => (b.submitted_at || '').localeCompare(a.submitted_at || ''));
+    renderStatus(rows);
+    renderTable(rows);
+  } catch (e) {
+    document.getElementById('statusBar').innerHTML = `<span class="error">Failed to load: ${esc(e.message)}</span>`;
+    document.getElementById('tableWrap').innerHTML = `<div class="error">Couldn't reach the API. Check cse-platform logs.</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

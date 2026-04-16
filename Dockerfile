@@ -13,4 +13,9 @@ RUN find internal -name '*.jsx' -print0 |     xargs -0 -r -I{} sh -c '       out
 FROM nginx:alpine
 COPY --from=build /app/internal/ /usr/share/nginx/internal/
 COPY external/ /usr/share/nginx/external/
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# The nginx:alpine entrypoint runs envsubst on /etc/nginx/templates/*.template
+# at container start, writing to /etc/nginx/conf.d/. The FILTER restricts
+# substitution to PROXY_API_KEY only, so nginx's own $variable syntax is
+# preserved verbatim.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+ENV NGINX_ENVSUBST_FILTER=^PROXY_API_KEY$
