@@ -1,0 +1,250 @@
+/**
+ * Design Tokens - CSS Custom Properties
+ *
+ * Extracted from ui-core/src/index.css (v2.0.76)
+ * These tokens are the single source of truth for colors, spacing, radii, and fonts.
+ *
+ * Semantic theme (--uicore-background, --uicore-primary, …) matches ui-core :root; components should
+ * prefer these over raw hsl/oklch/hex for shadcn-aligned UI. Brand scales (--color-green, …) stay
+ * for Button, Tabs, and legacy product greens (#00c57b) that differ from --uicore-primary.
+ */
+
+:root {
+    /* === Base (ui-core @theme) === */
+    --color-dark: #212121;
+    --color-white: #ffffff;
+
+    /* === Brand Colors === */
+    --color-green-50: #fbfefd;
+    --color-green-100: #a9f8d7;
+    --color-green-200: #67e7b1;
+    --color-green-300: #2ddf9c;
+    --color-green-400: #17d68e;
+    --color-green-450: #30c68d;
+    --color-green: #00c57b;
+    --color-green-500: #00c57b;
+    --color-green-600: #01b16f;
+    --color-green-700: #009960;
+    --color-green-800: #007448;
+    --color-green-900: #005233;
+
+    --color-orange-100: #f5d4a3;
+    --color-orange-200: #f4c57f;
+    --color-orange-300: #f3b045;
+    --color-orange-400: #f19202;
+    --color-orange: #f98d00;
+    --color-orange-500: #f98d00;
+
+    --color-red-100: #f5b9b9;
+    --color-red-200: #f9a2a2;
+    --color-red-300: #f67e7e;
+    --color-red-400: #f64a4a;
+    --color-red: #ff1f1f;
+    --color-red-500: #ff1f1f;
+    --color-red-600: #f60000;
+    --color-red-800: #9f0000;
+
+    --color-yellow-200: #ffe49e;
+    --color-yellow: #ffcb45;
+    --color-yellow-500: #ffcb45;
+    --color-yellow-600: #e9ae17;
+    --color-yellow-800: #c68e01;
+
+    --color-teal: #20a3c4;
+
+    --color-purple-200: #9b3be5;
+    --color-purple-500: #581b80;
+
+    --color-midnight: #01232c;
+
+    /* === Blue Palette (ui-core @theme — includes 150/250/350 steps) === */
+    --color-blue-50: #d8e0f5;
+    --color-blue-100: #bcc9f1;
+    --color-blue-150: #b4c1e6;
+    --color-blue-200: #a0b2e6;
+    --color-blue-250: #98aadf;
+    --color-blue-300: #809aea;
+    --color-blue-350: #7089d5;
+    --color-blue-400: #617fda;
+    --color-blue: #365ac7;
+    --color-blue-500: #365ac7;
+    --color-blue-600: #2344aa;
+    --color-blue-700: #13328d;
+    --color-blue-800: #061f68;
+    --color-blue-900: #001040;
+
+    /* === Chartreuse === */
+    --color-chartreuse-200: #96f8ac;
+    --color-chartreuse-400: #33d758;
+    --color-chartreuse: #03d932;
+    --color-chartreuse-500: #03d932;
+    --color-chartreuse-800: #079026;
+
+    /* === Beige Palette === */
+    --color-beige-100: #fcf9f7;
+    --color-beige-200: #f5ece7;
+    --color-beige-300: #f1e9e6;
+    --color-beige-400: #eae0dd;
+    --color-beige: #e1d7d3;
+    --color-beige-500: #e1d7d3;
+    --color-beige-600: #d6c8c2;
+    --color-beige-700: #c2b1ab;
+    --color-beige-800: #a59088;
+    --color-beige-900: #826d64;
+
+    /* === Gray Palette === */
+    --color-gray-100: #f8f9fa;
+    --color-gray-200: #edf1f2;
+    --color-gray-300: #e1e5e5;
+    --color-gray-400: #c6cbcc;
+    --color-gray: #949899;
+    --color-gray-500: #949899;
+    --color-gray-600: #4e4e4e;
+    --color-gray-700: #3d3d3d;
+    --color-gray-800: #262626;
+    --color-gray-900: #1a1a1a;
+
+    /* === Neutral Palette (ui-core @theme — matches divide-neutral-*, body text) === */
+    --color-neutral-50: hsl(210 20% 98%);
+    --color-neutral-100: hsl(210 16% 93%);
+    --color-neutral-200: hsl(210 14% 89%);
+    --color-neutral-300: hsl(210 13% 80%);
+    --color-neutral-400: hsl(210 12% 61%);
+    --color-neutral-500: hsl(210 11% 43%);
+    --color-neutral-600: hsl(210 13% 30%);
+    --color-neutral-700: hsl(210 15% 24%);
+    --color-neutral-800: hsl(210 20% 18%);
+    --color-neutral-900: hsl(210 24% 12%);
+
+    /* === Theme semantic (ui-core :root / shadcn) === */
+    --uicore-radius: 0.625rem;
+    --uicore-background: oklch(1 0 0);
+    --uicore-foreground: oklch(0.145 0 0);
+    --uicore-card: oklch(1 0 0);
+    --uicore-card-foreground: oklch(0.145 0 0);
+    --uicore-popover: oklch(1 0 0);
+    --uicore-popover-foreground: oklch(0.145 0 0);
+    --uicore-primary: hsl(160 84% 29%);
+    --uicore-primary-foreground: oklch(0.985 0 0);
+    --uicore-secondary: oklch(0.97 0 0);
+    --uicore-secondary-foreground: oklch(0.205 0 0);
+    --uicore-muted: oklch(0.97 0 0);
+    --uicore-muted-foreground: oklch(0.556 0 0);
+    --uicore-accent: oklch(0.97 0 0);
+    --uicore-accent-foreground: oklch(0.205 0 0);
+    --uicore-destructive: oklch(0.577 0.245 27.325);
+    --uicore-destructive-foreground: oklch(0.985 0 0);
+    --uicore-border: oklch(0.922 0 0);
+    --uicore-input: oklch(0.922 0 0);
+    --uicore-ring: oklch(0.708 0 0);
+    --uicore-chart-1: oklch(0.646 0.222 41.116);
+    --uicore-chart-2: oklch(0.6 0.118 184.704);
+    --uicore-chart-3: oklch(0.398 0.07 227.392);
+    --uicore-chart-4: oklch(0.828 0.189 84.429);
+    --uicore-chart-5: oklch(0.769 0.188 70.08);
+    /* Same as page/canvas white (was oklch(0.985 …), which read as gray next to --uicore-background) */
+    --uicore-sidebar: var(--uicore-background);
+    --uicore-sidebar-foreground: oklch(0.145 0 0);
+    --uicore-sidebar-primary: oklch(0.205 0 0);
+    --uicore-sidebar-primary-foreground: oklch(0.985 0 0);
+    --uicore-sidebar-accent: oklch(0.97 0 0);
+    --uicore-sidebar-accent-foreground: oklch(0.205 0 0);
+    --uicore-sidebar-border: oklch(0.922 0 0);
+    --uicore-sidebar-ring: oklch(0.708 0 0);
+
+    /* === Aliases: legacy / Figma names → theme === */
+    --color-primary: var(--uicore-primary);
+    --color-primary-light: hsl(160 84% 35%);
+    --color-primary-dark: hsl(160 84% 23%);
+    --color-success: hsl(142, 76%, 36%);
+    --color-warning: hsl(32, 95%, 44%);
+    --color-error: hsl(0, 84%, 60%);
+
+    /* === Spacing (cs = CompScience) === */
+    --cs2: 2px;
+    --cs4: 4px;
+    --cs6: 6px;
+    --cs8: 8px;
+    --cs10: 10px;
+    --cs12: 12px;
+    --cs14: 14px;
+    --cs16: 16px;
+    --cs20: 20px;
+    --cs24: 24px;
+    --cs32: 32px;
+    --cs40: 40px;
+    --cs44: 44px;
+    --cs48: 48px;
+    --cs56: 56px;
+    --cs64: 64px;
+    --cs72: 72px;
+    --cs80: 80px;
+
+    /* === Radii === */
+    --radius-4: 4px;
+    --radius-8: 8px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 14px;
+
+    /* === Font === */
+    --font-spline: "Spline Sans", sans-serif;
+}
+
+/* Dark theme (matches ui-core .dark — opt-in via .dark on ancestor) */
+.dark {
+    --uicore-background: oklch(0.145 0 0);
+    --uicore-foreground: oklch(0.985 0 0);
+    --uicore-card: oklch(0.205 0 0);
+    --uicore-card-foreground: oklch(0.985 0 0);
+    --uicore-popover: oklch(0.205 0 0);
+    --uicore-popover-foreground: oklch(0.985 0 0);
+    --uicore-primary: oklch(0.922 0 0);
+    --uicore-primary-foreground: oklch(0.205 0 0);
+    --uicore-secondary: oklch(0.269 0 0);
+    --uicore-secondary-foreground: oklch(0.985 0 0);
+    --uicore-muted: oklch(0.269 0 0);
+    --uicore-muted-foreground: oklch(0.708 0 0);
+    --uicore-accent: oklch(0.269 0 0);
+    --uicore-accent-foreground: oklch(0.985 0 0);
+    --uicore-destructive: oklch(0.704 0.191 22.216);
+    --uicore-destructive-foreground: oklch(0.985 0 0);
+    --uicore-border: oklch(1 0 0 / 10%);
+    --uicore-input: oklch(1 0 0 / 15%);
+    --uicore-ring: oklch(0.556 0 0);
+    --uicore-chart-1: oklch(0.488 0.243 264.376);
+    --uicore-chart-2: oklch(0.696 0.17 162.48);
+    --uicore-chart-3: oklch(0.769 0.188 70.08);
+    --uicore-chart-4: oklch(0.627 0.265 303.9);
+    --uicore-chart-5: oklch(0.645 0.246 16.439);
+    --uicore-sidebar: oklch(0.205 0 0);
+    --uicore-sidebar-foreground: oklch(0.985 0 0);
+    --uicore-sidebar-primary: oklch(0.488 0.243 264.376);
+    --uicore-sidebar-primary-foreground: oklch(0.985 0 0);
+    --uicore-sidebar-accent: oklch(0.269 0 0);
+    --uicore-sidebar-accent-foreground: oklch(0.985 0 0);
+    --uicore-sidebar-border: oklch(1 0 0 / 10%);
+    --uicore-sidebar-ring: oklch(0.556 0 0);
+}
+
+/**
+ * Base layer — parity with ui-core Tailwind `@layer base`
+ * (`* { border-border; outline-ring/50 }` + keyboard focus ring from `--uicore-ring`).
+ * Keeps default border-color on boxes that define a border width elsewhere.
+ */
+@layer base {
+    *,
+    ::before,
+    ::after {
+        border-color: var(--uicore-border);
+        outline-color: color-mix(in oklch, var(--uicore-ring) 50%, transparent);
+    }
+
+    *:focus-visible {
+        outline-width: 2px;
+        outline-style: solid;
+        outline-offset: 2px;
+        outline-color: var(--uicore-ring);
+    }
+}
