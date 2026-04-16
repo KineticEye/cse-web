@@ -48,6 +48,29 @@
     .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 12px; margin-top: 6px; }
     .kv dt { color: var(--grey-500); }
     .kv dd { color: var(--black); word-break: break-word; }
+
+    /* Action buttons */
+    .btn-sm { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--grey-300); background: white; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .btn-sm:hover { border-color: var(--brand-green); color: var(--brand-green); }
+    .btn-danger { color: #991B1B; border-color: #FCA5A5; }
+    .btn-danger:hover { background: #FEE2E2; border-color: #EF4444; color: #991B1B; }
+    .hs-link { font-size: 12px; color: var(--brand-green); text-decoration: none; }
+    .hs-link:hover { text-decoration: underline; }
+    .hs-input { width: 180px; padding: 4px 8px; border: 1px solid var(--grey-300); border-radius: 5px; font-size: 12px; font-family: inherit; }
+    .hs-input:focus { outline: none; border-color: var(--brand-green); }
+
+    /* Delete confirmation dialog */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .dialog { background: white; border-radius: 10px; padding: 24px; width: min(400px, 90vw); box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+    .dialog h3 { font-size: 16px; margin-bottom: 12px; color: #991B1B; }
+    .dialog p { font-size: 13px; color: var(--grey-600); margin-bottom: 16px; }
+    .dialog input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--grey-300); border-radius: 6px; font-size: 14px; font-family: monospace; box-sizing: border-box; }
+    .dialog input:focus { outline: none; border-color: #EF4444; }
+    .dialog-btns { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+    .dialog-btns button { padding: 8px 16px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 500; }
+    .dialog-btns .cancel { background: var(--grey-100); color: var(--grey-600); }
+    .dialog-btns .confirm { background: #EF4444; color: white; opacity: 0.4; pointer-events: none; }
+    .dialog-btns .confirm.active { opacity: 1; pointer-events: auto; }
   </style>
 </head>
 <body>
@@ -70,7 +93,9 @@
   </div>
 
 <script>
-const API = '/api/vms-requests?limit=500';
+const API_BASE = '/api/vms-requests';
+const HS_PORTAL = '7917625';
+let allRows = [];
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -83,17 +108,40 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function extractHsContactId(input) {
+  if (!input) return null;
+  const m = input.match(/record\/[\d-]+\/(\d+)/);
+  if (m) return m[1];
+  if (/^\d+$/.test(input.trim())) return input.trim();
+  return null;
+}
+
+function hsUrl(contactId) {
+  return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-1/${contactId}`;
+}
+
 function renderStatus(rows) {
   const byStatus = rows.reduce((acc, r) => {
     const k = r.status || 'unknown';
     acc[k] = (acc[k] || 0) + 1;
     return acc;
   }, {});
+  const verified = rows.filter(r => r.email_verified_at).length;
   const parts = [`<span><strong>${rows.length}</strong> total</span>`];
+  parts.push(`<span><strong>${verified}</strong> verified</span>`);
   for (const [k, v] of Object.entries(byStatus)) {
     parts.push(`<span><strong>${v}</strong> ${esc(k)}</span>`);
   }
   document.getElementById('statusBar').innerHTML = parts.join('');
+}
+
+function renderHsCell(r) {
+  const id = r.hs_contact_id;
+  if (id) {
+    return `<a class="hs-link" href="${esc(hsUrl(id))}" target="_blank" title="Open in HubSpot">${esc(id)}</a>
+            <button class="btn-sm" style="margin-left:4px;padding:2px 6px;font-size:10px" onclick="promptHs('${esc(r.confirmation_number)}','${esc(id)}')" title="Edit">&#9998;</button>`;
+  }
+  return `<button class="btn-sm" onclick="promptHs('${esc(r.confirmation_number)}','')">Link</button>`;
 }
 
 function renderTable(rows) {
@@ -109,62 +157,131 @@ function renderTable(rows) {
         <th>Confirmation #</th>
         <th>Status</th>
         <th>Verified</th>
+        <th>HubSpot</th>
         <th>Company</th>
         <th>Contact</th>
         <th>Email</th>
-        <th>Phone</th>
         <th>Cameras</th>
-        <th>Site</th>
         <th>City, State</th>
-        <th>ToS</th>
         <th>Details</th>
+        <th></th>
       </tr>
     </thead>
   `;
   const body = rows.map(r => {
     const statusClass = (r.status || '').toLowerCase() === 'pending' ? 'pill pending' : 'pill';
     return `
-      <tr>
+      <tr id="row-${esc(r.confirmation_number)}">
         <td>${esc(fmtDate(r.submitted_at))}</td>
         <td class="num">${esc(r.confirmation_number)}</td>
         <td><span class="${statusClass}">${esc(r.status || '—')}</span></td>
         <td>${r.email_verified_at ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>' : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>'}</td>
+        <td>${renderHsCell(r)}</td>
         <td>${esc(r.company)}</td>
         <td>${esc([r.first_name, r.last_name].filter(Boolean).join(' ') || '—')}<br><span class="muted">${esc(r.job_title || '')}</span></td>
         <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
-        <td>${esc(r.phone || '—')}</td>
         <td>${esc(r.camera_count ?? '—')}</td>
-        <td>${esc(r.site_name || '—')}</td>
         <td>${esc([r.city, r.state].filter(Boolean).join(', ') || '—')}</td>
-        <td class="num">${esc(r.tos_version || '—')}</td>
         <td>
           <details class="row-details">
             <summary>More</summary>
             <dl class="kv">
+              <dt>Phone</dt><dd>${esc(r.phone || '—')}</dd>
+              <dt>Site name</dt><dd>${esc(r.site_name || '—')}</dd>
               <dt>Street</dt><dd>${esc([r.street, r.suite].filter(Boolean).join(', '))}</dd>
               <dt>ZIP / Country</dt><dd>${esc([r.zip, r.country].filter(Boolean).join(' · '))}</dd>
               <dt>Network env</dt><dd>${esc(r.network_environment || '—')}</dd>
               <dt>Special instructions</dt><dd>${esc(r.special_instructions || '—')}</dd>
+              <dt>ToS version</dt><dd class="num">${esc(r.tos_version || '—')}</dd>
               <dt>ToS accepted at</dt><dd>${esc(fmtDate(r.tos_accepted_at))}</dd>
               <dt>Acceptance ID</dt><dd class="num">${esc(r.acceptance_id || '—')}</dd>
             </dl>
           </details>
         </td>
+        <td><button class="btn-sm btn-danger" onclick="confirmDelete('${esc(r.confirmation_number)}','${esc(r.company)}')">Delete</button></td>
       </tr>
     `;
   }).join('');
   wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
 }
 
+// ── HubSpot link ──────────────────────────────────────────────────────────
+async function promptHs(confNum, current) {
+  const input = prompt(
+    'Paste a HubSpot contact URL or ID:\n\n' +
+    'Example: https://app.hubspot.com/contacts/.../record/0-1/215810181528\n' +
+    'Or just: 215810181528',
+    current || ''
+  );
+  if (input === null) return; // cancelled
+  const id = extractHsContactId(input);
+  if (!id) { alert('Could not extract a HubSpot contact ID from that input.'); return; }
+  try {
+    const res = await fetch(`${API_BASE}/${confNum}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hs_contact_id: id }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // Update local data and re-render
+    const updated = await res.json();
+    allRows = allRows.map(r => r.confirmation_number === confNum ? updated : r);
+    renderTable(allRows);
+  } catch (e) { alert('Failed to save: ' + e.message); }
+}
+
+// ── Delete with "type DELETE" confirmation ─────────────────────────────────
+function confirmDelete(confNum, company) {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `
+    <div class="dialog">
+      <h3>Delete VMS Request</h3>
+      <p>This will permanently delete the request from <strong>${esc(company)}</strong>
+         (<strong>${esc(confNum)}</strong>). This cannot be undone.</p>
+      <p style="font-size:12px;color:var(--grey-500);margin-bottom:8px">Type <strong>DELETE</strong> to confirm:</p>
+      <input id="deleteInput" autocomplete="off" spellcheck="false" placeholder="DELETE">
+      <div class="dialog-btns">
+        <button class="cancel" id="deleteCancel">Cancel</button>
+        <button class="confirm" id="deleteConfirm">Delete Request</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const inp = document.getElementById('deleteInput');
+  const btn = document.getElementById('deleteConfirm');
+  inp.focus();
+  inp.addEventListener('input', () => {
+    btn.classList.toggle('active', inp.value.trim() === 'DELETE');
+  });
+  document.getElementById('deleteCancel').onclick = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  btn.onclick = async () => {
+    if (inp.value.trim() !== 'DELETE') return;
+    btn.textContent = 'Deleting…';
+    btn.style.pointerEvents = 'none';
+    try {
+      const res = await fetch(`${API_BASE}/${confNum}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      allRows = allRows.filter(r => r.confirmation_number !== confNum);
+      renderStatus(allRows);
+      renderTable(allRows);
+    } catch (e) { alert('Delete failed: ' + e.message); }
+    overlay.remove();
+  };
+}
+
+// ── Initial load ──────────────────────────────────────────────────────────
 async function load() {
   try {
-    const res = await fetch(API);
+    const res = await fetch(API_BASE + '?limit=500');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = await res.json();
-    // Most recent first
-    rows.sort((a, b) => (b.submitted_at || '').localeCompare(a.submitted_at || ''));
-    renderStatus(rows);
-    renderTable(rows);
+    allRows = await res.json();
+    allRows.sort((a, b) => (b.submitted_at || '').localeCompare(a.submitted_at || ''));
+    renderStatus(allRows);
+    renderTable(allRows);
   } catch (e) {
     document.getElementById('statusBar').innerHTML = `<span class="error">Failed to load: ${esc(e.message)}</span>`;
     document.getElementById('tableWrap').innerHTML = `<div class="error">Couldn't reach the API. Check cse-platform logs.</div>`;
