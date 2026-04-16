@@ -11,32 +11,32 @@
 
     body {
       font-family: var(--font-spline);
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 400;
       color: var(--color-gray-900);
       background: var(--color-gray-100);
     }
 
-    /* Header */
+    /* Header — dark (page-specific; ui_core Header is white/app-chrome) */
     header {
       background: var(--color-midnight);
       color: white;
-      padding: 16px 40px;
+      padding: var(--cs16) var(--cs40);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
     header .logo {
-      font-size: 20px;
+      font-size: 1.25rem;
       font-weight: 600;
-      line-height: 120%;
+      line-height: 1.2;
     }
     header .logo span { color: var(--color-green); }
-    header nav { display: flex; align-items: center; gap: 24px; }
+    header nav { display: flex; align-items: center; gap: var(--cs24); }
     header nav a {
       color: var(--color-gray-400);
       text-decoration: none;
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 500;
       transition: color 0.2s;
     }
@@ -46,84 +46,101 @@
     .hero {
       background: var(--color-midnight);
       color: white;
-      padding: 80px 40px;
+      padding: var(--cs80) var(--cs40);
       text-align: center;
     }
     .hero h1 {
-      font-size: 24px;
-      font-weight: 600;
-      line-height: 145%;
-      margin-bottom: 12px;
-    }
-    .hero h1 span { color: var(--color-green); }
-    .hero p {
-      font-size: 16px;
+      font-size: 1.5rem;
       font-weight: 400;
-      line-height: 150%;
+      line-height: 2.25rem;
+      margin-bottom: var(--cs12);
+    }
+    .hero h1 span { color: var(--color-green); font-weight: 600; }
+    .hero p {
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5rem;
       color: var(--color-gray-400);
       max-width: 560px;
-      margin: 0 auto 32px;
+      margin: 0 auto var(--cs32);
     }
-    .hero-cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .hero-cta { display: inline-flex; gap: var(--cs12); flex-wrap: wrap; justify-content: center; }
 
-    /* Buttons */
-    .button {
+    /* Buttons — ui_core .ui-button spec (pill, weight 400, focus rings) */
+    .ui-button {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 100px;
+      justify-content: center;
+      gap: var(--cs8);
+      padding: var(--cs8) var(--cs16);
+      border-radius: 9999px;
       font-family: var(--font-spline);
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 1rem;
+      font-weight: 400;
       text-decoration: none;
       cursor: pointer;
       border: none;
-      transition: all 0.2s;
+      outline: none;
+      transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+      user-select: none;
     }
-    .button.primary {
+    .ui-button.primary {
       background: var(--color-green);
-      color: white;
+      color: var(--color-white);
     }
-    .button.primary:hover { background: var(--color-green-700); }
-    .button.secondary {
+    .ui-button.primary:hover { background: var(--color-green-700); }
+    .ui-button.primary:active { background: var(--color-green-800); }
+    .ui-button.primary:focus-visible {
+      box-shadow: 0 0 0 4px rgba(0, 197, 123, 0.3), 0 1px 3px 0 rgba(0,0,0,0.1);
+    }
+    .ui-button.secondary {
       background: transparent;
       color: var(--color-green);
-      border: 1.5px solid var(--color-green);
+      border: 1px solid var(--color-green);
     }
-    .button.secondary:hover { background: rgba(0, 197, 123, 0.1); }
+    .ui-button.secondary:hover {
+      color: var(--color-green-700);
+      border-color: var(--color-green-700);
+    }
+    .ui-button.secondary:active {
+      color: var(--color-green-800);
+      border-color: var(--color-green-800);
+    }
+    .ui-button.secondary:focus-visible {
+      box-shadow: 0 0 0 2px currentColor, 0 1px 3px 0 rgba(0,0,0,0.1);
+    }
 
     /* Container */
-    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 60px var(--cs24); }
 
-    /* Section titles */
+    /* Section titles — ui_core Typography h2: 1.25rem / weight 400 */
     .section-title {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 120%;
+      font-size: 1.25rem;
+      font-weight: 400;
+      line-height: 1.5rem;
       color: var(--color-midnight);
-      margin-bottom: 4px;
+      margin-bottom: var(--cs4);
     }
     .section-sub {
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 400;
       color: var(--color-gray-500);
-      margin-bottom: 24px;
+      margin-bottom: var(--cs24);
     }
 
-    /* FAQ */
-    .faq { display: flex; flex-direction: column; gap: 8px; margin-bottom: 60px; }
+    /* FAQ — ui_core Card pattern: radius-xl, gray-400 border at 75% */
+    .faq { display: flex; flex-direction: column; gap: var(--cs8); margin-bottom: 60px; }
     .faq-item {
       background: white;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-xl);
+      border: 1px solid color-mix(in srgb, var(--color-gray-400) 75%, transparent);
       overflow: hidden;
       transition: box-shadow 0.2s;
     }
     .faq-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .faq-q {
-      padding: 16px 20px;
-      font-size: 14px;
+      padding: var(--cs16) var(--cs20);
+      font-size: 0.875rem;
       font-weight: 500;
       display: flex;
       justify-content: space-between;
@@ -138,10 +155,10 @@
       transition: transform 0.2s;
     }
     .faq-a {
-      padding: 0 20px 16px;
-      font-size: 14px;
+      padding: 0 var(--cs20) var(--cs16);
+      font-size: 0.875rem;
       font-weight: 400;
-      line-height: 150%;
+      line-height: 1.5;
       color: var(--color-gray-600);
       display: none;
     }
@@ -150,46 +167,46 @@
     .faq-item.open .faq-a { display: block; }
     .faq-item.open .faq-q svg { transform: rotate(180deg); }
 
-    /* Download cards */
+    /* Download cards — ui_core Card: radius-xl, gray-400 border at 75% */
     .downloads {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px;
+      gap: var(--cs12);
       margin-bottom: 60px;
     }
     .dl-card {
       background: white;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-gray-300);
-      padding: 20px;
+      border-radius: var(--radius-xl);
+      border: 1px solid color-mix(in srgb, var(--color-gray-400) 75%, transparent);
+      padding: var(--cs20);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--cs8);
       transition: box-shadow 0.2s;
     }
     .dl-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .dl-card svg { color: var(--color-green); }
     .dl-title {
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 600;
       color: var(--color-gray-900);
     }
     .dl-desc {
-      font-size: 12px;
+      font-size: 0.75rem;
       font-weight: 400;
-      line-height: 110%;
+      line-height: 1.1;
       color: var(--color-gray-500);
       flex: 1;
     }
     .dl-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: var(--cs6);
       background: var(--color-midnight);
       color: white;
-      padding: 6px 12px;
-      border-radius: 100px;
-      font-size: 12px;
+      padding: var(--cs6) var(--cs12);
+      border-radius: 9999px;
+      font-size: 0.75rem;
       font-weight: 500;
       text-decoration: none;
       width: fit-content;
@@ -198,25 +215,25 @@
     .dl-btn:hover { background: var(--color-gray-800); }
     .dl-btn svg { width: 14px; height: 14px; }
 
-    /* Contact box */
+    /* Contact box — radius-xl to match cards */
     .contact-box {
       background: var(--color-midnight);
       color: white;
-      border-radius: var(--radius-md);
-      padding: 40px;
+      border-radius: var(--radius-xl);
+      padding: var(--cs40);
       text-align: center;
     }
     .contact-box h3 {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 120%;
-      margin-bottom: 8px;
+      font-size: 1.25rem;
+      font-weight: 400;
+      line-height: 1.5rem;
+      margin-bottom: var(--cs8);
     }
     .contact-box p {
       color: var(--color-gray-400);
-      margin-bottom: 24px;
-      font-size: 14px;
-      line-height: 150%;
+      margin-bottom: var(--cs24);
+      font-size: 0.875rem;
+      line-height: 1.5;
     }
 
     /* Footer */
@@ -224,8 +241,8 @@
       background: var(--color-midnight);
       color: var(--color-gray-500);
       text-align: center;
-      padding: 24px;
-      font-size: 12px;
+      padding: var(--cs24);
+      font-size: 0.75rem;
       font-weight: 400;
     }
     footer a { color: var(--color-green); text-decoration: none; }
@@ -233,11 +250,11 @@
 
     /* Mobile */
     @media (max-width: 768px) {
-      header { padding: 16px 20px; }
+      header { padding: var(--cs16) var(--cs20); }
       header nav { display: none; }
-      .hero { padding: 48px 20px; }
-      .container { padding: 40px 16px; }
-      .contact-box { padding: 32px 20px; }
+      .hero { padding: var(--cs48) var(--cs20); }
+      .container { padding: var(--cs40) var(--cs16); }
+      .contact-box { padding: var(--cs32) var(--cs20); }
     }
   </style>
 </head>
@@ -258,9 +275,9 @@
   <h1>CompScience <span>Support</span></h1>
   <p>Everything your safety team needs — guides, resources, and answers to common questions about the CompScience platform.</p>
   <div class="hero-cta">
-    <a href="/vms-request.html" class="button primary">Request VMS Device</a>
-    <a href="#faq" class="button secondary">Browse FAQ</a>
-    <a href="#downloads" class="button secondary">Download Resources</a>
+    <a href="/vms-request.html" class="ui-button primary">Request VMS Device</a>
+    <a href="#faq" class="ui-button secondary">Browse FAQ</a>
+    <a href="#downloads" class="ui-button secondary">Download Resources</a>
   </div>
 </div>
 
@@ -385,7 +402,7 @@
   <div id="contact" class="contact-box">
     <h3>Need help from our team?</h3>
     <p>Our Customer Success Engineers are here to help. Reach out and we'll get back to you within one business day.</p>
-    <a href="mailto:cse@compscience.support" class="button primary">cse@compscience.support</a>
+    <a href="mailto:cse@compscience.support" class="ui-button primary">cse@compscience.support</a>
   </div>
 
 </div>
