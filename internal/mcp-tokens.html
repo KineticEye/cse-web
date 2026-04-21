@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Tokens · CompScience Internal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-green: #00C57B;
+      --brand-green-700: #00A366;
+      --blue-midnight: #01232C;
+      --grey-100: #F8F9FA;
+      --grey-200: #EDEEF0;
+      --grey-300: #E1E5E5;
+      --grey-500: #949899;
+      --grey-600: #4E4E4E;
+      --black: #1A1A1A;
+      --red: #B91C1C;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Spline Sans", sans-serif;
+      background: var(--grey-100);
+      color: var(--black);
+      padding: 32px 24px;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    h1 { font-size: 22px; font-weight: 600; color: var(--blue-midnight); }
+    .sub { font-size: 13px; color: var(--grey-500); margin-top: 4px; }
+    .back { font-size: 13px; color: var(--grey-600); text-decoration: none; }
+    .back:hover { color: var(--brand-green); }
+
+    .card {
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 14px; font-weight: 600; color: var(--blue-midnight);
+      margin-bottom: 12px;
+    }
+
+    .form-row { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--grey-300);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--brand-green); }
+    button {
+      padding: 10px 18px;
+      background: var(--brand-green);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--brand-green-700); }
+    button:disabled { background: var(--grey-500); cursor: not-allowed; }
+    button.ghost {
+      background: transparent;
+      color: var(--grey-600);
+      border: 1px solid var(--grey-300);
+    }
+    button.ghost:hover { color: var(--red); border-color: var(--red); background: #FEF2F2; }
+
+    .secret-box {
+      margin-top: 16px;
+      padding: 16px;
+      background: #FFF8E5;
+      border: 1px solid #F6E6A3;
+      border-radius: 6px;
+      display: none;
+    }
+    .secret-box.visible { display: block; }
+    .secret-box h3 {
+      font-size: 13px; color: #8A6D00; margin-bottom: 8px; font-weight: 600;
+    }
+    .secret-row {
+      display: flex; gap: 8px; align-items: center;
+      font-family: "SFMono-Regular", Menlo, monospace;
+      font-size: 13px;
+      background: white;
+      border: 1px solid #F0D97C;
+      border-radius: 4px;
+      padding: 8px 12px;
+    }
+    .secret-row code { flex: 1; overflow-x: auto; white-space: nowrap; }
+    .copy-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      background: var(--blue-midnight);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+    .copy-btn.copied { background: var(--brand-green); }
+
+    .snippet {
+      margin-top: 12px;
+      padding: 14px;
+      background: var(--blue-midnight);
+      color: #D1FAE5;
+      border-radius: 6px;
+      font-family: "SFMono-Regular", Menlo, monospace;
+      font-size: 12px;
+      white-space: pre;
+      overflow-x: auto;
+      position: relative;
+    }
+    .snippet .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      text-align: left; padding: 10px 14px;
+      border-bottom: 1px solid var(--grey-300);
+      vertical-align: middle;
+    }
+    th {
+      background: var(--grey-100); color: var(--grey-600);
+      font-weight: 600; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    tr:last-child td { border-bottom: none; }
+    td.mono { font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; color: var(--grey-600); }
+    td.muted { color: var(--grey-500); }
+    .revoked-pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 500;
+      background: #FEF2F2; color: var(--red); border: 1px solid #FCA5A5;
+    }
+
+    .empty, .error { padding: 24px; text-align: center; color: var(--grey-500); font-size: 14px; }
+    .error { color: var(--red); }
+
+    .warn {
+      font-size: 12px; color: #8A6D00; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>MCP Tokens</h1>
+        <p class="sub">Personal bearer tokens for the cse-mcp server. Paste into Claude Desktop to ask questions about the pipeline.</p>
+      </div>
+      <a href="/" class="back">← Back</a>
+    </header>
+
+    <div class="card">
+      <h2>Generate new token</h2>
+      <div class="form-row">
+        <input type="text" id="token-name" placeholder="Name (e.g. 'My laptop', 'Work Claude Desktop')" />
+        <button id="generate-btn">Generate</button>
+      </div>
+      <p class="warn">The full token is shown once at creation. Store it now — we only keep a hash.</p>
+
+      <div class="secret-box" id="secret-box">
+        <h3>New token — copy it now</h3>
+        <div class="secret-row">
+          <code id="secret-value"></code>
+          <button class="copy-btn" id="copy-token-btn">Copy</button>
+        </div>
+        <p class="warn" style="margin-top: 10px;">Add this to Claude Desktop's MCP config:</p>
+        <div class="snippet">
+<button class="copy-btn" id="copy-snippet-btn">Copy</button><span id="snippet-text"></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your tokens</h2>
+      <div id="token-list">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/mcp-tokens';
+    const listEl = document.getElementById('token-list');
+
+    function fmt(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      if (isNaN(d)) return ts;
+      return d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    async function load() {
+      try {
+        const res = await fetch(API);
+        if (!res.ok) {
+          listEl.innerHTML = `<div class="error">Failed to load (HTTP ${res.status})</div>`;
+          return;
+        }
+        const data = await res.json();
+        const tokens = data.tokens || [];
+        if (!tokens.length) {
+          listEl.innerHTML = `<div class="empty">You have no tokens yet.</div>`;
+          return;
+        }
+        const rows = tokens.map(t => `
+          <tr>
+            <td>${(t.name || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])) || '<span class="muted">—</span>'}</td>
+            <td class="mono">${t.prefix}…</td>
+            <td class="muted">${fmt(t.created_at)}</td>
+            <td class="muted">${fmt(t.last_used_at)}</td>
+            <td>${t.revoked_at ? '<span class="revoked-pill">revoked</span>' : ''}</td>
+            <td>${t.revoked_at ? '' : `<button class="ghost" data-id="${t.id}">Revoke</button>`}</td>
+          </tr>
+        `).join('');
+        listEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Prefix</th><th>Created</th><th>Last used</th><th></th><th></th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+        listEl.querySelectorAll('button[data-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Revoke this token? Any Claude Desktop session using it will lose access.')) return;
+            btn.disabled = true;
+            const id = btn.getAttribute('data-id');
+            const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+            if (res.ok) { await load(); }
+            else { btn.disabled = false; alert('Revoke failed (HTTP ' + res.status + ')'); }
+          });
+        });
+      } catch (e) {
+        listEl.innerHTML = `<div class="error">${e.message}</div>`;
+      }
+    }
+
+    document.getElementById('generate-btn').addEventListener('click', async () => {
+      const name = document.getElementById('token-name').value.trim();
+      const btn = document.getElementById('generate-btn');
+      btn.disabled = true; btn.textContent = 'Generating…';
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name || null }),
+        });
+        if (!res.ok) {
+          alert('Generate failed (HTTP ' + res.status + ')');
+          return;
+        }
+        const body = await res.json();
+        const token = body.token;
+        document.getElementById('secret-value').textContent = token;
+        document.getElementById('snippet-text').textContent =
+`{
+  "mcpServers": {
+    "cse": {
+      "transport": "http",
+      "url": "https://mcp.compscience.support/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${token}"
+      }
+    }
+  }
+}`;
+        document.getElementById('secret-box').classList.add('visible');
+        document.getElementById('token-name').value = '';
+        await load();
+      } finally {
+        btn.disabled = false; btn.textContent = 'Generate';
+      }
+    });
+
+    function wireCopy(btnId, textGetter) {
+      const btn = document.getElementById(btnId);
+      btn.addEventListener('click', async () => {
+        const text = textGetter();
+        try {
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = 'Copied'; btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = old; btn.classList.remove('copied'); }, 1200);
+        } catch (e) { alert('Copy failed — select manually'); }
+      });
+    }
+    wireCopy('copy-token-btn', () => document.getElementById('secret-value').textContent);
+    wireCopy('copy-snippet-btn', () => document.getElementById('snippet-text').textContent);
+
+    load();
+  </script>
+</body>
+</html>

@@ -28,6 +28,22 @@ server {
         proxy_set_header Content-Type $http_content_type;
     }
 
+    # MCP personal tokens. Each user manages their own via this page.
+    # cse-platform reads X-Auth-Request-Email (set by oauth2-proxy
+    # upstream of nginx) to pin operations to the calling user's
+    # identity — one user cannot list/revoke another user's tokens.
+    # Prefix match covers POST/GET /api/mcp-tokens and DELETE /api/mcp-tokens/{id}.
+    location /api/mcp-tokens {
+        proxy_pass http://cse-platform:8000/v1/mcp-tokens;
+        proxy_set_header Authorization "Bearer ${PROXY_API_KEY}";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Auth-Request-Email $http_x_auth_request_email;
+        proxy_set_header X-Forwarded-Email $http_x_forwarded_email;
+        proxy_set_header Content-Type $http_content_type;
+    }
+
     location / {
         root /usr/share/nginx/internal;
         index index.html index.htm;
