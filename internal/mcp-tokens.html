@@ -182,7 +182,7 @@
           <code id="secret-value"></code>
           <button class="copy-btn" id="copy-token-btn">Copy</button>
         </div>
-        <p class="warn" style="margin-top: 10px;">Add this to Claude Desktop's MCP config:</p>
+        <p class="warn" style="margin-top: 10px;">Add this to Claude Desktop's <code>claude_desktop_config.json</code> (uses <code>mcp-remote</code>, an npx-installed stdio→HTTP bridge so it works on all Claude Desktop versions). Fully quit and relaunch Claude Desktop after saving.</p>
         <div class="snippet">
 <button class="copy-btn" id="copy-snippet-btn">Copy</button><span id="snippet-text"></span></div>
       </div>
@@ -276,11 +276,14 @@
 `{
   "mcpServers": {
     "cse": {
-      "transport": "http",
-      "url": "https://mcp.compscience.support/mcp/",
-      "headers": {
-        "Authorization": "Bearer ${token}"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.compscience.support/mcp/",
+        "--header",
+        "Authorization:Bearer ${token}"
+      ]
     }
   }
 }`;
