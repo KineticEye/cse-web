@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamScope · CompScience Internal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-green: #00C57B;
+      --brand-green-700: #00A366;
+      --brand-green-10: rgba(0,197,123,0.10);
+      --extra-light-green: #F0FDF7;
+      --blue-midnight: #01232C;
+      --grey-100: #F8F9FA;
+      --grey-200: #EDEEF0;
+      --grey-300: #E1E5E5;
+      --grey-400: #C6CBCC;
+      --grey-500: #949899;
+      --grey-600: #4E4E4E;
+      --black: #1A1A1A;
+      --danger: #B91C1C;
+      --danger-bg: #FEE2E2;
+      --danger-border: #FCA5A5;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Spline Sans", sans-serif;
+      background: var(--grey-100);
+      color: var(--black);
+      padding: 32px 24px;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    h1 { font-size: 22px; font-weight: 600; color: var(--blue-midnight); }
+    .sub { font-size: 13px; color: var(--grey-500); margin-top: 4px; }
+    .back { font-size: 13px; color: var(--grey-600); text-decoration: none; }
+    .back:hover { color: var(--brand-green); }
+
+    .card {
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card h2 { font-size: 14px; font-weight: 600; color: var(--blue-midnight); margin-bottom: 12px; }
+    .lbl { font-size: 11px; font-weight: 600; color: var(--grey-600); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+
+    input[type="email"], input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--grey-300);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      background: white;
+    }
+    input:focus { border-color: var(--brand-green); }
+
+    .btn {
+      padding: 10px 18px;
+      background: var(--brand-green);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .btn:hover { background: var(--brand-green-700); }
+    .btn:disabled { background: var(--grey-400); cursor: not-allowed; }
+    .btn.ghost {
+      background: transparent;
+      color: var(--grey-600);
+      border: 1px solid var(--grey-300);
+    }
+    .btn.ghost:hover { color: var(--brand-green); border-color: var(--brand-green); }
+    .btn.secondary {
+      background: transparent;
+      color: var(--brand-green);
+      border: 1px solid var(--brand-green);
+    }
+    .btn.secondary:hover { background: var(--extra-light-green); }
+    .btn.danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+    .btn.danger:hover { background: #FCA5A5; }
+    .btn.small { padding: 6px 12px; font-size: 12px; }
+    .btn.block { width: 100%; }
+
+    .err {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 6px;
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    /* Phases */
+    .phase { display: none; }
+    .phase.active { display: block; }
+
+    /* Search phase */
+    #phase-search .card { max-width: 440px; margin: 40px auto 0; }
+
+    /* Loading */
+    .loading { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; gap: 14px; }
+    .spin {
+      width: 28px; height: 28px;
+      border: 2px solid var(--grey-300);
+      border-top-color: var(--brand-green);
+      border-radius: 50%;
+      animation: sp 0.75s linear infinite;
+    }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    .loading p { font-size: 13px; color: var(--grey-500); }
+
+    /* Swipe */
+    .swipe-wrap { max-width: 680px; margin: 0 auto; }
+    .swipe-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 12px; }
+    .swipe-head .who { font-size: 16px; font-weight: 600; color: var(--blue-midnight); }
+    .swipe-head .who-sub { font-size: 12px; color: var(--grey-500); margin-top: 2px; }
+    .swipe-head .stats { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+      border: 1px solid;
+    }
+    .pill.keep { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+    .pill.drop { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+    .prog-bar { height: 3px; background: var(--grey-300); border-radius: 2px; margin-bottom: 12px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--brand-green); transition: width 0.3s; }
+
+    .cam-card {
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s;
+    }
+    .cam-card.fly-keep { transform: translateX(160%) rotate(14deg); opacity: 0; }
+    .cam-card.fly-drop { transform: translateX(-160%) rotate(-14deg); opacity: 0; }
+    .img-wrap { position: relative; background: var(--grey-100); }
+    .cam-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+    .badge {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0);
+      font-weight: 700; font-size: 2.2rem;
+      padding: 6px 20px; border-radius: 8px;
+      border: 3px solid;
+      opacity: 0;
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+      pointer-events: none;
+      background: rgba(255,255,255,0.95);
+    }
+    .badge.keep { color: var(--brand-green); border-color: var(--brand-green); }
+    .badge.drop { color: var(--danger); border-color: var(--danger); }
+    .cam-card.fly-keep .badge.keep, .cam-card.fly-drop .badge.drop {
+      transform: translate(-50%,-50%) scale(1); opacity: 1;
+    }
+    .cam-info {
+      padding: 12px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--grey-300);
+      gap: 12px;
+    }
+    .cam-info .name { font-size: 14px; font-weight: 600; color: var(--blue-midnight); }
+    .cam-info .count { font-size: 12px; color: var(--grey-500); margin-top: 2px; }
+    .hints { text-align: right; line-height: 1.7; font-size: 11px; color: var(--grey-500); }
+    .key {
+      display: inline-block;
+      background: var(--grey-100);
+      border: 1px solid var(--grey-300);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      font-family: "SFMono-Regular", Menlo, monospace;
+      color: var(--grey-600);
+    }
+    .swipe-actions { display: flex; gap: 12px; justify-content: center; margin: 14px 0 10px; }
+    .swipe-footer { text-align: center; font-size: 11px; color: var(--grey-500); }
+
+    /* Review */
+    .review-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    .bulk-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .bulk-bar .search-in {
+      flex: 1; min-width: 160px;
+      padding: 6px 10px;
+      border: 1px solid var(--grey-300);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+    .bulk-bar .search-in:focus { border-color: var(--brand-green); }
+    .bulk-count { font-size: 11px; color: var(--grey-500); white-space: nowrap; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .thumb {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--grey-300);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s, opacity 0.2s;
+      background: white;
+    }
+    .thumb:hover { transform: scale(1.02); }
+    .thumb.keep { border-color: var(--brand-green); }
+    .thumb.drop { border-color: var(--grey-300); opacity: 0.45; }
+    .thumb img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--grey-100); }
+    .thumb .tlbl {
+      padding: 6px 8px;
+      font-size: 11px;
+      color: var(--grey-600);
+      text-align: center;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+      background: white;
+      border-top: 1px solid var(--grey-300);
+    }
+    .thumb.keep .tlbl { color: var(--brand-green); font-weight: 600; }
+    .thumb .dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: white;
+    }
+    .dot.keep { background: var(--brand-green); }
+    .dot.drop { background: var(--grey-500); }
+    .dot.pending { background: var(--grey-400); }
+
+    /* Format toggle */
+    .fmt-toggle {
+      display: inline-flex;
+      border: 1px solid var(--grey-300);
+      border-radius: 6px;
+      overflow: hidden;
+      background: white;
+    }
+    .fmt-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      background: transparent;
+      color: var(--grey-600);
+      border: none;
+    }
+    .fmt-btn.active { background: var(--brand-green-10); color: var(--brand-green); }
+
+    .action-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .action-bar .spacer { flex: 1; }
+    .action-bar .fmt-label { font-size: 11px; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px; }
+
+    /* Export */
+    .export-img {
+      max-width: 100%;
+      display: block;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: white;
+    }
+    .tip {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: var(--extra-light-green);
+      border: 1px solid var(--brand-green);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--grey-600);
+      line-height: 1.6;
+    }
+    .tip strong { color: var(--brand-green); }
+
+    canvas#canvas { display: none; }
+
+    /* Inline svg icons inherit currentColor */
+    svg { flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>CamScope</h1>
+        <p class="sub">Camera culling for VSD submissions · pulls from HubSpot</p>
+      </div>
+      <a class="back" href="/">&larr; Internal home</a>
+    </header>
+
+    <!-- SEARCH -->
+    <section id="phase-search" class="phase active">
+      <div class="card">
+        <div class="lbl">Contact email</div>
+        <input type="email" id="email-input" placeholder="alex@toptiertech.com" autocomplete="off" />
+        <div style="height:14px"></div>
+        <button class="btn block" onclick="fetchCameras()">Fetch cameras &rarr;</button>
+        <div id="search-error" class="err" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- LOADING -->
+    <section id="phase-loading" class="phase">
+      <div class="loading">
+        <div class="spin"></div>
+        <p id="loading-msg">Loading…</p>
+      </div>
+    </section>
+
+    <!-- SWIPE -->
+    <section id="phase-swipe" class="phase">
+      <div class="swipe-wrap">
+        <div class="swipe-head">
+          <div>
+            <div class="who" id="swipe-company"></div>
+            <div class="who-sub" id="swipe-name"></div>
+          </div>
+          <div class="stats">
+            <span class="pill keep" id="kept-count">&#10003; 0 kept</span>
+            <span class="who-sub" id="swipe-progress">0 of 0</span>
+          </div>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="prog"></div></div>
+        <div class="cam-card" id="cam-card">
+          <div class="img-wrap">
+            <img class="cam-img" id="cam-img" alt="" />
+            <div class="badge keep">KEEP &#10003;</div>
+            <div class="badge drop">DROP &#10007;</div>
+          </div>
+          <div class="cam-info">
+            <div>
+              <div class="name" id="cam-name"></div>
+              <div class="count" id="cam-counter"></div>
+            </div>
+            <div class="hints">
+              <div><span class="key">&larr;</span> drop</div>
+              <div><span class="key">&rarr;</span> keep</div>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-actions">
+          <button class="btn danger" onclick="decide('drop')">&#10007; Drop</button>
+          <button class="btn" onclick="decide('keep')">&#10003; Keep</button>
+        </div>
+        <div class="swipe-footer">
+          arrow keys · <span class="key">K</span> keep · <span class="key">D</span> drop
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section id="phase-review" class="phase">
+      <div class="review-head">
+        <div>
+          <h1 style="font-size:18px">Review cameras</h1>
+          <p class="sub" id="review-sub"></p>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <span class="pill keep" id="review-kept-count">&#10003; 0 keep</span>
+          <span class="pill drop" id="review-drop-count">&#10007; 0 drop</span>
+        </div>
+      </div>
+      <div class="bulk-bar">
+        <button class="btn ghost small" onclick="bulkSet('keep')">Select all</button>
+        <button class="btn ghost small" onclick="bulkSet('drop')">Deselect all</button>
+        <button class="btn ghost small" onclick="invertAll()">Invert</button>
+        <input class="search-in" id="bulk-search" placeholder="Filter by name…" oninput="filterGrid(this.value)" />
+        <span class="bulk-count" id="grid-count"></span>
+      </div>
+      <div class="grid" id="review-grid"></div>
+      <div class="action-bar">
+        <button class="btn ghost" onclick="goSwipe()">&#8644; Swipe again</button>
+        <div class="spacer"></div>
+        <span class="fmt-label">Format</span>
+        <div class="fmt-toggle">
+          <button class="fmt-btn active" id="fmt-png" onclick="setFormat('png')">PNG</button>
+          <button class="fmt-btn" id="fmt-pdf" onclick="setFormat('pdf')">PDF</button>
+        </div>
+        <button class="btn secondary" onclick="generateComposite('all')">All cameras</button>
+        <button class="btn" id="gen-btn" onclick="generateComposite('selected')">Selected &rarr;</button>
+      </div>
+    </section>
+
+    <!-- EXPORT -->
+    <section id="phase-export" class="phase">
+      <div style="margin-bottom:14px">
+        <h1 id="export-title" style="font-size:18px">Composite ready</h1>
+        <p class="sub" id="export-sub"></p>
+      </div>
+      <img id="composite-img" class="export-img" alt="composite" />
+      <div class="action-bar">
+        <button class="btn ghost" onclick="showPhase('review')">&larr; Edit</button>
+        <button class="btn secondary" id="other-btn">Other view</button>
+        <div class="spacer"></div>
+        <button class="btn" onclick="downloadComposite()">&darr; Download <span id="dl-fmt">PNG</span></button>
+        <button class="btn ghost" onclick="resetApp()">+ New review</button>
+      </div>
+      <div class="tip">
+        <strong>TIP</strong> Download both the selected composite and the all-cameras overview — drop them into the Slack thread for the VSD so the reviewer has picks and full context side by side.
+      </div>
+    </section>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+const API_BASE = '/api/hubspot';
+let cams = [], swipeIdx = 0, contact = {}, swipeAnimating = false;
+let exportFormat = 'png', currentCompositeType = 'selected';
+
+// ── PHASES ───────────────────────────────────────────────────────────────────
+const PHASES = ['search', 'loading', 'swipe', 'review', 'export'];
+function showPhase(p) {
+  for (const ph of PHASES) {
+    document.getElementById('phase-' + ph).classList.toggle('active', ph === p);
+  }
+}
+
+// ── FETCH FLOW ───────────────────────────────────────────────────────────────
+async function fetchCameras() {
+  const email = document.getElementById('email-input').value.trim();
+  if (!email) { showError('Please enter a contact email'); return; }
+
+  showPhase('loading');
+  setLoadingMsg('Searching HubSpot for contact…');
+  try {
+    const searchRes = await fetch(API_BASE + '/contacts/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!searchRes.ok) throw new Error(await readErr(searchRes));
+    const searchData = await searchRes.json();
+    const results = searchData.results || [];
+    if (!results.length) throw new Error('No contact found for ' + email);
+
+    const contactId = results[0].id;
+    setLoadingMsg('Loading submission data…');
+
+    const props = 'firstname,lastname,company,building_s_cameras';
+    const objRes = await fetch(API_BASE + '/objects/contacts/' + contactId + '?properties=' + props);
+    if (!objRes.ok) throw new Error(await readErr(objRes));
+    const objData = await objRes.json();
+    const p = objData.properties || {};
+
+    const name = ((p.firstname || '') + ' ' + (p.lastname || '')).trim() || email;
+    contact = { name, company: p.company || '' };
+
+    const rawCams = p.building_s_cameras || '';
+    const fileRefs = parseCameraRaw(rawCams);
+    if (!fileRefs.length) throw new Error('No camera files found on this contact');
+
+    setLoadingMsg('Fetching ' + fileRefs.length + ' image URL' + (fileRefs.length !== 1 ? 's' : '') + '…');
+    const loaded = await Promise.all(fileRefs.map(async (ref) => {
+      try {
+        const r = await fetch(API_BASE + '/files/' + ref.fileId + '/signed-url?expirationSeconds=86400');
+        if (!r.ok) return null;
+        const j = await r.json();
+        if (!j.url) return null;
+        return {
+          id: ref.fileId,
+          name: friendlyName(j.name || ref.rawName || ref.fileId),
+          url: j.url,
+          status: 'pending',
+        };
+      } catch (_) { return null; }
+    }));
+
+    cams = loaded.filter(Boolean);
+    // Dedupe by URL.
+    const seen = new Set();
+    cams = cams.filter(c => seen.has(c.url) ? false : (seen.add(c.url), true));
+
+    if (!cams.length) throw new Error('No camera files could be resolved from HubSpot');
+
+    buildReview();
+  } catch (e) {
+    showError(e.message || String(e));
+    showPhase('search');
+  }
+}
+
+function parseCameraRaw(raw) {
+  const refs = [];
+  const parts = raw.replace(/\n/g, ';').split(';').map(s => s.trim()).filter(Boolean);
+  for (const part of parts) {
+    let fileId = null;
+    const m = part.match(/\/signed-url-redirect\/(\d+)/);
+    if (m) fileId = m[1];
+    else {
+      const m2 = part.match(/^(\d+)/);
+      if (m2) fileId = m2[1];
+    }
+    if (!fileId) continue;
+    const fn = part.match(/[Ff]ilename=([^&;]+)/);
+    refs.push({ fileId, rawName: fn ? decodeURIComponent(fn[1]) : fileId });
+  }
+  return refs;
+}
+
+function friendlyName(filename) {
+  let n = filename.replace(/\.[a-z]{3,5}$/i, '');
+  n = n.replace(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-?/i, '');
+  n = n.replace(/^building_s_cameras[-_]?/i, '');
+  n = n.replace(/-[0-9a-f]{6}$/i, '');
+  n = n.replace(/[-_]+/g, ' ').trim();
+  return n ? n.replace(/\b\w/g, c => c.toUpperCase()) : filename;
+}
+
+async function readErr(res) {
+  try {
+    const j = await res.json();
+    return j.detail || j.error || (res.status + ' ' + res.statusText);
+  } catch (_) { return res.status + ' ' + res.statusText; }
+}
+
+// ── SWIPE ────────────────────────────────────────────────────────────────────
+function startSwipe() {
+  document.getElementById('swipe-company').textContent = contact.company || contact.name || '';
+  document.getElementById('swipe-name').textContent = contact.company ? contact.name : '';
+  showPhase('swipe');
+  renderSwipeCard();
+}
+
+function renderSwipeCard() {
+  if (swipeIdx >= cams.length) { buildReview(); return; }
+  const c = cams[swipeIdx];
+  const kept = cams.filter(x => x.status === 'keep').length;
+  document.getElementById('cam-img').src = c.url;
+  document.getElementById('cam-name').textContent = c.name;
+  document.getElementById('cam-counter').textContent = 'Camera ' + (swipeIdx + 1) + ' of ' + cams.length;
+  document.getElementById('swipe-progress').textContent = swipeIdx + ' of ' + cams.length;
+  document.getElementById('kept-count').textContent = '\u2713 ' + kept + ' kept';
+  document.getElementById('prog').style.width = ((swipeIdx / cams.length) * 100) + '%';
+  document.getElementById('cam-card').classList.remove('fly-keep', 'fly-drop');
+}
+
+function decide(d) {
+  if (swipeAnimating) return;
+  swipeAnimating = true;
+  document.getElementById('cam-card').classList.add(d === 'keep' ? 'fly-keep' : 'fly-drop');
+  setTimeout(() => {
+    cams[swipeIdx].status = d;
+    swipeIdx++;
+    swipeAnimating = false;
+    if (swipeIdx >= cams.length) buildReview();
+    else renderSwipeCard();
+  }, 380);
+}
+
+function goSwipe() {
+  if (cams.some(c => c.status !== 'pending')) {
+    if (!confirm('Re-swiping will reset all decisions. Continue?')) return;
+  }
+  swipeIdx = 0;
+  cams.forEach(c => { c.status = 'pending'; });
+  startSwipe();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('phase-swipe').classList.contains('active')) return;
+  if (e.key === 'ArrowRight' || e.key === 'k') decide('keep');
+  if (e.key === 'ArrowLeft' || e.key === 'd') decide('drop');
+});
+
+// ── REVIEW ───────────────────────────────────────────────────────────────────
+function buildReview() {
+  showPhase('review');
+  const kept = cams.filter(c => c.status === 'keep').length;
+  const q = (document.getElementById('bulk-search') || {}).value || '';
+  document.getElementById('review-sub').textContent =
+    (contact.company || contact.name || '') + ' · ' + cams.length + ' camera' + (cams.length !== 1 ? 's' : '') + ' total';
+  document.getElementById('review-kept-count').textContent = '\u2713 ' + kept + ' keep';
+  document.getElementById('review-drop-count').textContent = '\u2717 ' + (cams.length - kept) + ' drop';
+  document.getElementById('gen-btn').disabled = kept === 0;
+
+  const frag = document.createDocumentFragment();
+  cams.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb ' + c.status;
+    div.dataset.i = i;
+    div.dataset.name = c.name.toLowerCase();
+    div.onclick = () => toggleCam(i);
+    const dotCls = c.status === 'keep' ? 'keep' : (c.status === 'drop' ? 'drop' : 'pending');
+    const dotChar = c.status === 'keep' ? '\u2713' : (c.status === 'drop' ? '\u2717' : '·');
+    div.innerHTML = '<img src="' + c.url + '" alt="" onerror="this.style.background=\'var(--grey-100)\'" />'
+      + '<div class="tlbl">' + escapeHtml(c.name) + '</div>'
+      + '<div class="dot ' + dotCls + '">' + dotChar + '</div>';
+    frag.appendChild(div);
+  });
+  const grid = document.getElementById('review-grid');
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+  if (q) filterGrid(q);
+  updateCount(q);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toggleCam(i) {
+  cams[i].status = cams[i].status === 'keep' ? 'drop' : 'keep';
+  buildReview();
+}
+
+function bulkSet(status) {
+  getVisible().forEach(i => { cams[i].status = status; });
+  buildReview();
+}
+
+function invertAll() {
+  getVisible().forEach(i => { cams[i].status = cams[i].status === 'keep' ? 'drop' : 'keep'; });
+  buildReview();
+}
+
+function getVisible() {
+  const q = ((document.getElementById('bulk-search') || {}).value || '').toLowerCase();
+  return cams.map((c, i) => (!q || c.name.toLowerCase().includes(q)) ? i : -1).filter(i => i !== -1);
+}
+
+function filterGrid(q) {
+  const lower = q.toLowerCase();
+  document.querySelectorAll('#review-grid .thumb').forEach(el => {
+    el.style.display = (!q || el.dataset.name.includes(lower)) ? '' : 'none';
+  });
+  updateCount(q);
+}
+
+function updateCount(q) {
+  const vis = getVisible().length;
+  document.getElementById('grid-count').textContent = q
+    ? vis + ' of ' + cams.length + ' shown'
+    : cams.length + ' camera' + (cams.length !== 1 ? 's' : '');
+}
+
+// ── FORMAT + EXPORT ──────────────────────────────────────────────────────────
+function setFormat(fmt) {
+  exportFormat = fmt;
+  document.getElementById('fmt-png').classList.toggle('active', fmt === 'png');
+  document.getElementById('fmt-pdf').classList.toggle('active', fmt === 'pdf');
+}
+
+async function generateComposite(type) {
+  currentCompositeType = type;
+  const kept = cams.filter(c => c.status === 'keep');
+  const sel = type === 'selected' ? kept : cams;
+  if (!sel.length) return;
+
+  const C = {
+    bg:         '#F8F9FA',
+    headerBg:   '#FFFFFF',
+    headerLine: '#E1E5E5',
+    title:      '#00C57B',
+    titleDark:  '#01232C',
+    sub:        '#4E4E4E',
+    cellBg:     '#FFFFFF',
+    cellBorder: '#E1E5E5',
+    labelBg:    '#FFFFFF',
+    labelText:  '#01232C',
+    labelKeep:  '#00C57B',
+    dimOverlay: 'rgba(248,249,250,0.6)',
+    keepBorder: '#00C57B',
+  };
+
+  const cols = sel.length <= 2 ? 1 : sel.length <= 4 ? 2 : 3;
+  const rows = Math.ceil(sel.length / cols);
+  const CW = 520, CH = 292, PAD = 10, LH = 38, HDR = 64, BRD = 5;
+
+  const canvas = document.getElementById('canvas');
+  canvas.width = cols * (CW + PAD) + PAD;
+  canvas.height = rows * (CH + LH + PAD) + PAD + HDR;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = C.headerBg; ctx.fillRect(0, 0, canvas.width, HDR);
+  ctx.strokeStyle = C.headerLine; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, HDR); ctx.lineTo(canvas.width, HDR); ctx.stroke();
+
+  ctx.fillStyle = C.titleDark;
+  ctx.font = "bold 14px 'Spline Sans', sans-serif"; ctx.textAlign = 'left';
+  const subtitle = type === 'selected' ? 'Selected cameras' : 'All cameras overview';
+  ctx.fillText((contact.company || contact.name || 'Cameras') + '  ·  ' + subtitle, 16, HDR - 24);
+  ctx.fillStyle = C.sub; ctx.font = "12px 'Spline Sans', sans-serif";
+  ctx.fillText(
+    (type === 'selected' ? kept.length + ' cameras' : kept.length + ' of ' + cams.length + ' selected')
+      + '  ·  ' + new Date().toLocaleDateString(),
+    16, HDR - 8
+  );
+
+  function loadImg(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+
+  for (let ii = 0; ii < sel.length; ii++) {
+    const col = ii % cols, row = Math.floor(ii / cols);
+    const x = PAD + col * (CW + PAD);
+    const y = HDR + PAD + row * (CH + LH + PAD);
+    const isKept = sel[ii].status === 'keep';
+
+    ctx.fillStyle = C.cellBg; ctx.fillRect(x, y, CW, CH);
+    ctx.strokeStyle = C.cellBorder; ctx.lineWidth = 1; ctx.strokeRect(x, y, CW, CH);
+
+    const img = await loadImg(sel[ii].url);
+    if (img) {
+      try {
+        const s = Math.min(CW / img.width, CH / img.height);
+        ctx.drawImage(img, x + (CW - img.width * s) / 2, y + (CH - img.height * s) / 2, img.width * s, img.height * s);
+      } catch (_) { /* tainted canvas — skip */ }
+    } else {
+      ctx.fillStyle = C.sub; ctx.font = "12px 'Spline Sans', sans-serif"; ctx.textAlign = 'center';
+      ctx.fillText('NO PREVIEW', x + CW / 2, y + CH / 2);
+    }
+
+    if (type === 'all' && !isKept) {
+      ctx.fillStyle = C.dimOverlay; ctx.fillRect(x, y, CW, CH);
+    }
+    if (type === 'all' && isKept) {
+      ctx.strokeStyle = C.keepBorder; ctx.lineWidth = BRD;
+      ctx.strokeRect(x + BRD / 2, y + BRD / 2, CW - BRD, CH - BRD);
+      ctx.fillStyle = C.keepBorder;
+      ctx.beginPath(); ctx.arc(x + CW - 18, y + 18, 13, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Spline Sans", sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('\u2713', x + CW - 18, y + 23);
+    }
+
+    ctx.fillStyle = C.labelBg; ctx.fillRect(x, y + CH, CW, LH);
+    ctx.strokeStyle = C.cellBorder; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, y + CH); ctx.lineTo(x + CW, y + CH); ctx.stroke();
+    ctx.fillStyle = (type === 'all' && !isKept) ? C.sub : (isKept ? C.labelKeep : C.labelText);
+    ctx.font = "600 12px 'Spline Sans', sans-serif"; ctx.textAlign = 'center';
+    ctx.fillText(sel[ii].name, x + CW / 2, y + CH + 25);
+  }
+
+  const url = canvas.toDataURL('image/png');
+  document.getElementById('composite-img').src = url;
+  const isSelected = type === 'selected';
+  document.getElementById('export-title').textContent = isSelected ? 'Selected cameras' : 'All cameras overview';
+  document.getElementById('export-sub').textContent =
+    (isSelected ? kept.length + ' camera' + (kept.length !== 1 ? 's' : '') : kept.length + ' of ' + cams.length + ' highlighted')
+    + '  ·  ' + (contact.company || contact.name || '') + '  ·  ready for Slack';
+  const other = document.getElementById('other-btn');
+  other.textContent = isSelected ? 'All cameras' : 'Selected';
+  other.onclick = () => generateComposite(isSelected ? 'all' : 'selected');
+  document.getElementById('dl-fmt').textContent = exportFormat.toUpperCase();
+  showPhase('export');
+}
+
+function downloadComposite() {
+  const suffix = currentCompositeType === 'selected' ? 'selected' : 'all-cameras';
+  const base = (contact.company || contact.name || 'cameras').replace(/\s+/g, '-') + '-' + suffix;
+  if (exportFormat === 'pdf') { exportPDF(base); return; }
+  const a = document.createElement('a');
+  a.href = document.getElementById('composite-img').src;
+  a.download = base + '.png';
+  a.click();
+}
+
+function exportPDF(basename) {
+  const imgSrc = document.getElementById('composite-img').src;
+  const img = new Image();
+  img.onload = () => {
+    const pw = img.width, ph = img.height;
+    const c2 = document.createElement('canvas');
+    c2.width = img.width; c2.height = img.height;
+    c2.getContext('2d').drawImage(img, 0, 0);
+    const jpegData = c2.toDataURL('image/jpeg', 0.92).split(',')[1];
+
+    const nl = '\n';
+    const stream = 'q ' + pw.toFixed(2) + ' 0 0 ' + ph.toFixed(2) + ' 0 0 cm /Im1 Do Q';
+
+    const binary = atob(jpegData);
+    const bytes = new Uint8Array(binary.length);
+    for (let bi = 0; bi < binary.length; bi++) bytes[bi] = binary.charCodeAt(bi);
+
+    const enc = new TextEncoder();
+    const objs = [
+      enc.encode('1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj' + nl),
+      enc.encode('2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj' + nl),
+      enc.encode('3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 ' + pw.toFixed(2) + ' ' + ph.toFixed(2) + ']/Contents 4 0 R/Resources<</XObject<</Im1 5 0 R>>>>>>endobj' + nl),
+      enc.encode('4 0 obj<</Length ' + stream.length + '>>' + nl + 'stream' + nl + stream + nl + 'endstream' + nl + 'endobj' + nl),
+    ];
+    const imgHdr = enc.encode('5 0 obj<</Type/XObject/Subtype/Image/Width ' + img.width + '/Height ' + img.height + '/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ' + bytes.length + '>>' + nl + 'stream' + nl);
+    const imgFtr = enc.encode(nl + 'endstream' + nl + 'endobj' + nl);
+
+    const header = enc.encode('%PDF-1.4' + nl);
+    const offsets = {};
+    let off = header.length;
+    for (let oi = 0; oi < objs.length; oi++) { offsets[oi + 1] = off; off += objs[oi].length; }
+    offsets[5] = off; off += imgHdr.length + bytes.length + imgFtr.length;
+
+    const xrefOff = off;
+    let xref = 'xref' + nl + '0 6' + nl + '0000000000 65535 f ' + nl;
+    for (let xi = 1; xi <= 5; xi++) xref += String(offsets[xi]).padStart(10, '0') + ' 00000 n ' + nl;
+    xref += 'trailer<</Size 6/Root 1 0 R>>' + nl + 'startxref' + nl + xrefOff + nl + '%%EOF';
+    const xrefEnc = enc.encode(xref);
+
+    const parts = [header, ...objs, imgHdr, bytes, imgFtr, xrefEnc];
+    const total = parts.reduce((s, p) => s + p.length, 0);
+    const result = new Uint8Array(total);
+    let pos = 0;
+    parts.forEach(p => { result.set(p, pos); pos += p.length; });
+
+    const blob = new Blob([result], { type: 'application/pdf' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = basename + '.pdf';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  img.src = imgSrc;
+}
+
+// ── UTILITIES ────────────────────────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('search-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+function setLoadingMsg(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+function resetApp() {
+  cams = []; swipeIdx = 0; contact = {};
+  document.getElementById('email-input').value = '';
+  document.getElementById('search-error').style.display = 'none';
+  showPhase('search');
+}
+
+document.getElementById('email-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') fetchCameras();
+});
+</script>
+</body>
+</html>
