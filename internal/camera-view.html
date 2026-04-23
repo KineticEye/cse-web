@@ -353,56 +353,6 @@
     /* Inline svg icons inherit currentColor */
     svg { flex-shrink: 0; }
 
-    /* Dev mode toggle + bar */
-    .dev-toggle {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--grey-600);
-      cursor: pointer; user-select: none;
-    }
-    .dev-toggle input { margin: 0; cursor: pointer; accent-color: #B54708; }
-    .dev-bar {
-      display: none;
-      align-items: center; gap: 10px; flex-wrap: wrap;
-      margin: -8px 0 20px;
-      padding: 10px 14px;
-      background: #FFF8E5;
-      border: 1px solid #F6D97C;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #8A6D00;
-    }
-    .dev-bar.active { display: flex; }
-    .dev-bar-tag {
-      background: #B54708; color: white;
-      padding: 2px 8px; border-radius: 4px;
-      font-weight: 700; letter-spacing: 0.05em;
-      font-size: 10px;
-    }
-    .dev-bar input[type=email] {
-      flex: 1; min-width: 200px;
-      padding: 5px 10px;
-      border: 1px solid #F6D97C;
-      border-radius: 4px;
-      font-family: inherit;
-      font-size: 12px;
-      outline: none;
-      background: white;
-    }
-    .dev-bar input[type=email]:focus { border-color: #B54708; }
-    .dev-bar-note { color: var(--grey-500); font-size: 11px; }
-
-    .modal-dev-banner {
-      margin-bottom: 14px;
-      padding: 10px 12px;
-      background: #FFF8E5;
-      border: 1px solid #F6D97C;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #8A6D00;
-      line-height: 1.5;
-    }
-    .modal-dev-banner strong { color: #B54708; }
-
     /* "Send to client" modal */
     .modal-overlay {
       position: fixed; inset: 0;
@@ -476,20 +426,8 @@
         <h1>Camera View</h1>
         <p class="sub">Camera culling for VSD submissions · HubSpot contact or local files</p>
       </div>
-      <div style="display:flex; gap:14px; align-items:center">
-        <label class="dev-toggle" title="When on, Send-to-client prefills the review-link email with your test recipient instead of the HubSpot contact.">
-          <input type="checkbox" id="dev-mode-toggle" />
-          <span>Dev mode</span>
-        </label>
-        <a class="back" href="/">&larr; Internal home</a>
-      </div>
+      <a class="back" href="/">&larr; Internal home</a>
     </header>
-    <div class="dev-bar" id="dev-bar">
-      <span class="dev-bar-tag">DEV</span>
-      <span>Review links will be sent to your test recipient, not the HubSpot contact.</span>
-      <input type="email" id="dev-email-input" placeholder="test-recipient@compscience.com" />
-      <span class="dev-bar-note" id="dev-bar-note"></span>
-    </div>
 
     <!-- SEARCH -->
     <section id="phase-search" class="phase active">
@@ -622,22 +560,22 @@
   <!-- SEND TO CLIENT MODAL -->
   <div class="modal-overlay" id="send-modal" onclick="handleOverlayClick(event)">
     <div class="modal">
-      <h3>Send selection link to client</h3>
+      <h3>Send selection link to reviewer</h3>
       <p class="hint">
-        The client gets an email with a 30-min magic link. When they submit their
-        selection, it posts to the Linear issue as a comment plus attachment.
+        The reviewer gets an email with a 30-min magic link. When they submit,
+        the selection posts to the Linear issue as a comment plus attachment.
       </p>
-      <div class="modal-dev-banner" id="modal-dev-banner" style="display:none">
-        <strong>DEV MODE</strong> — the review link will be emailed to your test recipient.
-        <span id="modal-dev-real"></span>
-      </div>
       <div class="row">
         <div class="lbl">Linear issue ID</div>
         <input type="text" id="send-linear-id" placeholder="CSE-123" autocomplete="off" />
       </div>
       <div class="row">
-        <div class="lbl" id="send-email-lbl">Client email</div>
-        <input type="email" id="send-client-email" placeholder="client@example.com" autocomplete="off" />
+        <div class="lbl">Images pulled from (HubSpot contact)</div>
+        <input type="email" id="send-hubspot-email" placeholder="it-poc@client.com" autocomplete="off" />
+      </div>
+      <div class="row">
+        <div class="lbl">Send review link to</div>
+        <input type="email" id="send-client-email" placeholder="decision-maker@client.com" autocomplete="off" />
       </div>
       <div id="send-modal-error" class="err" style="display:none;margin-top:12px"></div>
       <div id="send-modal-result" class="modal-result" style="display:none"></div>
@@ -1190,43 +1128,10 @@ document.getElementById('email-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') fetchCameras();
 });
 
-// ── DEV MODE ─────────────────────────────────────────────────────────────────
-// When on, the Send-to-client modal prefills the review-link email with a
-// saved test recipient instead of the HubSpot contact. Nothing server-side
-// changes — the backend just sees whatever email we POST. State persists
-// across page loads via localStorage.
-let devMode = false;
-let devEmail = '';
-try {
-  devMode = localStorage.getItem('cv-dev-mode') === '1';
-  devEmail = localStorage.getItem('cv-dev-email') || '';
-} catch (_) {}
-
-const devToggle = document.getElementById('dev-mode-toggle');
-const devBar = document.getElementById('dev-bar');
-const devEmailInput = document.getElementById('dev-email-input');
-const devBarNote = document.getElementById('dev-bar-note');
-
-function applyDevMode() {
-  devToggle.checked = devMode;
-  devBar.classList.toggle('active', devMode);
-  devEmailInput.value = devEmail;
-  devBarNote.textContent = devMode && !devEmail ? 'Set a test recipient above.' : '';
-}
-
-devToggle.addEventListener('change', () => {
-  devMode = devToggle.checked;
-  try { localStorage.setItem('cv-dev-mode', devMode ? '1' : '0'); } catch (_) {}
-  applyDevMode();
-});
-devEmailInput.addEventListener('input', () => {
-  devEmail = devEmailInput.value.trim();
-  try { localStorage.setItem('cv-dev-email', devEmail); } catch (_) {}
-  devBarNote.textContent = devMode && !devEmail ? 'Set a test recipient above.' : '';
-});
-applyDevMode();
-
 // ── SEND TO CLIENT ───────────────────────────────────────────────────────────
+// Two email fields: "pull-from" (HubSpot contact, prefilled from the fetch
+// we already did) and "send-to" (reviewer / decision-maker). Production-
+// normal: IT-POC provides images, security manager picks cameras.
 function openSendModal() {
   document.getElementById('send-modal').classList.add('active');
   document.getElementById('send-modal-error').style.display = 'none';
@@ -1235,25 +1140,10 @@ function openSendModal() {
   const btn = document.getElementById('send-submit-btn');
   btn.disabled = false; btn.textContent = 'Send email →'; btn.style.display = '';
 
-  // Prefill client email based on mode.
-  const emailField = document.getElementById('send-client-email');
-  const lbl = document.getElementById('send-email-lbl');
-  const banner = document.getElementById('modal-dev-banner');
-  const realSlot = document.getElementById('modal-dev-real');
-
-  if (devMode) {
-    emailField.value = devEmail || '';
-    lbl.textContent = 'Test recipient email';
-    banner.style.display = 'block';
-    realSlot.textContent = contact.email
-      ? ' In production this would go to ' + contact.email + '.'
-      : '';
-  } else {
-    emailField.value = contact.email || '';
-    lbl.textContent = 'Client email';
-    banner.style.display = 'none';
-    realSlot.textContent = '';
-  }
+  document.getElementById('send-hubspot-email').value = contact.email || '';
+  let lastSendTo = '';
+  try { lastSendTo = localStorage.getItem('cv-last-reviewer') || ''; } catch (_) {}
+  document.getElementById('send-client-email').value = lastSendTo;
 
   setTimeout(() => document.getElementById('send-linear-id').focus(), 50);
 }
@@ -1268,6 +1158,7 @@ function handleOverlayClick(e) {
 
 async function submitSendModal() {
   const linearId = document.getElementById('send-linear-id').value.trim();
+  const hubspotEmail = document.getElementById('send-hubspot-email').value.trim();
   const clientEmail = document.getElementById('send-client-email').value.trim();
   const errEl = document.getElementById('send-modal-error');
   errEl.style.display = 'none';
@@ -1278,10 +1169,12 @@ async function submitSendModal() {
     return;
   }
   if (!clientEmail || !clientEmail.includes('@')) {
-    errEl.textContent = '⚠ Enter a valid client email';
+    errEl.textContent = '⚠ Enter a valid reviewer email';
     errEl.style.display = 'block';
     return;
   }
+
+  try { localStorage.setItem('cv-last-reviewer', clientEmail); } catch (_) {}
 
   const btn = document.getElementById('send-submit-btn');
   btn.disabled = true; btn.textContent = 'Sending…';
@@ -1292,6 +1185,7 @@ async function submitSendModal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         linear_issue_id: linearId.toUpperCase(),
+        hubspot_contact_email: hubspotEmail,
         client_email: clientEmail,
         contact_label: contact.company || contact.name || '',
         cameras: cams.map(c => ({ file_id: c.id, name: c.name })),

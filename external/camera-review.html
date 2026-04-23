@@ -523,8 +523,11 @@ async function loadResult() {
   (data.cameras || []).forEach(c => {
     const div = document.createElement('div');
     div.className = 'thumb ' + (c.kept ? 'keep' : 'drop');
+    const imgTag = c.url
+      ? '<img src="' + escapeHtml(c.url) + '" alt="" onerror="this.style.background=\'var(--grey-100)\'" />'
+      : '<div style="aspect-ratio:16/9;background:var(--grey-100);display:flex;align-items:center;justify-content:center;color:var(--grey-500);font-size:11px">NO PREVIEW</div>';
     div.innerHTML =
-      '<div style="aspect-ratio:16/9;background:var(--grey-100);display:flex;align-items:center;justify-content:center;color:var(--grey-500);font-size:11px">' + (c.kept ? 'KEPT' : '') + '</div>'
+      imgTag
       + '<div class="tlbl">' + escapeHtml(c.name || c.id) + '</div>'
       + '<div class="dot ' + (c.kept ? 'keep' : 'drop') + '">' + (c.kept ? '\u2713' : '\u2022') + '</div>';
     frag.appendChild(div);
