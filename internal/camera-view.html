@@ -352,6 +352,71 @@
 
     /* Inline svg icons inherit currentColor */
     svg { flex-shrink: 0; }
+
+    /* "Send to client" modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(1,35,44,0.45);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 10px;
+      padding: 24px;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    }
+    .modal h3 { font-size: 17px; font-weight: 600; color: var(--blue-midnight); margin-bottom: 6px; }
+    .modal .hint { font-size: 12px; color: var(--grey-500); margin-bottom: 16px; line-height: 1.5; }
+    .modal .row + .row { margin-top: 12px; }
+    .modal input[type="text"], .modal input[type="email"] {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--grey-300);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    .modal input:focus { border-color: var(--brand-green); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+    .modal-result {
+      margin-top: 14px;
+      padding: 12px;
+      background: var(--extra-light-green);
+      border: 1px solid var(--brand-green);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--grey-600);
+      line-height: 1.5;
+    }
+    .modal-result code {
+      display: block;
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 4px;
+      font-family: "SFMono-Regular", Menlo, monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .modal-result .copy-btn {
+      margin-top: 8px;
+      padding: 5px 11px;
+      background: var(--blue-midnight);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .modal-result .copy-btn.copied { background: var(--brand-green); }
   </style>
 </head>
 <body>
@@ -458,6 +523,7 @@
       <div class="grid" id="review-grid"></div>
       <div class="action-bar">
         <button class="btn ghost" onclick="goSwipe()">&#8644; Swipe again</button>
+        <button class="btn ghost" id="send-client-btn" onclick="openSendModal()" style="display:none">✉ Send to client</button>
         <div class="spacer"></div>
         <span class="fmt-label">Format</span>
         <div class="fmt-toggle">
@@ -491,11 +557,38 @@
 
   <canvas id="canvas"></canvas>
 
+  <!-- SEND TO CLIENT MODAL -->
+  <div class="modal-overlay" id="send-modal" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <h3>Send selection link to client</h3>
+      <p class="hint">
+        The client gets an email with a 30-min magic link. When they submit their
+        selection, it posts to the Linear issue as a comment plus attachment.
+      </p>
+      <div class="row">
+        <div class="lbl">Linear issue ID</div>
+        <input type="text" id="send-linear-id" placeholder="CSE-123" autocomplete="off" />
+      </div>
+      <div class="row">
+        <div class="lbl">Client email</div>
+        <input type="email" id="send-client-email" placeholder="client@example.com" autocomplete="off" />
+      </div>
+      <div id="send-modal-error" class="err" style="display:none;margin-top:12px"></div>
+      <div id="send-modal-result" class="modal-result" style="display:none"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="closeSendModal()" id="send-cancel-btn">Cancel</button>
+        <button class="btn" id="send-submit-btn" onclick="submitSendModal()">Send email &rarr;</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 // ── STATE ────────────────────────────────────────────────────────────────────
 const API_BASE = '/api/hubspot';
+const CR_API_BASE = '/api/camera-review';
 let cams = [], swipeIdx = 0, contact = {}, swipeAnimating = false;
 let exportFormat = 'png', currentCompositeType = 'selected';
+let camSource = null;   // 'hubspot' | 'local' — controls "Send to client" visibility
 
 // ── PHASES ───────────────────────────────────────────────────────────────────
 const PHASES = ['search', 'loading', 'swipe', 'review', 'export'];
@@ -562,6 +655,7 @@ async function fetchCameras() {
 
     if (!cams.length) throw new Error('No camera files could be resolved from HubSpot');
 
+    camSource = 'hubspot';
     buildReview();
   } catch (e) {
     showError(e.message || String(e));
@@ -696,6 +790,7 @@ function handleLocalFiles(fileList) {
     reader.readAsDataURL(file);
   }))).then((loaded) => {
     cams = loaded;
+    camSource = 'local';
     buildReview();
   });
 }
@@ -759,6 +854,7 @@ function buildReview() {
   document.getElementById('review-kept-count').textContent = '\u2713 ' + kept + ' keep';
   document.getElementById('review-drop-count').textContent = '\u2717 ' + (cams.length - kept) + ' drop';
   document.getElementById('gen-btn').disabled = kept === 0;
+  document.getElementById('send-client-btn').style.display = camSource === 'hubspot' ? '' : 'none';
 
   const frag = document.createDocumentFragment();
   cams.forEach((c, i) => {
@@ -1015,7 +1111,7 @@ function setLoadingMsg(msg) {
 }
 
 function resetApp() {
-  cams = []; swipeIdx = 0; contact = {};
+  cams = []; swipeIdx = 0; contact = {}; camSource = null;
   document.getElementById('email-input').value = '';
   document.getElementById('search-error').style.display = 'none';
   document.getElementById('file-input').value = '';
@@ -1026,6 +1122,94 @@ function resetApp() {
 
 document.getElementById('email-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') fetchCameras();
+});
+
+// ── SEND TO CLIENT ───────────────────────────────────────────────────────────
+function openSendModal() {
+  document.getElementById('send-modal').classList.add('active');
+  document.getElementById('send-modal-error').style.display = 'none';
+  document.getElementById('send-modal-result').style.display = 'none';
+  document.getElementById('send-cancel-btn').textContent = 'Cancel';
+  const btn = document.getElementById('send-submit-btn');
+  btn.disabled = false; btn.textContent = 'Send email →'; btn.style.display = '';
+  setTimeout(() => document.getElementById('send-linear-id').focus(), 50);
+}
+
+function closeSendModal() {
+  document.getElementById('send-modal').classList.remove('active');
+}
+
+function handleOverlayClick(e) {
+  if (e.target.id === 'send-modal') closeSendModal();
+}
+
+async function submitSendModal() {
+  const linearId = document.getElementById('send-linear-id').value.trim();
+  const clientEmail = document.getElementById('send-client-email').value.trim();
+  const errEl = document.getElementById('send-modal-error');
+  errEl.style.display = 'none';
+
+  if (!/^[A-Z]+-\d+$/i.test(linearId)) {
+    errEl.textContent = '⚠ Enter a Linear issue identifier like CSE-123';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!clientEmail || !clientEmail.includes('@')) {
+    errEl.textContent = '⚠ Enter a valid client email';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('send-submit-btn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  try {
+    const res = await fetch(CR_API_BASE + '/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        linear_issue_id: linearId.toUpperCase(),
+        client_email: clientEmail,
+        contact_label: contact.company || contact.name || '',
+        cameras: cams.map(c => ({ file_id: c.id, name: c.name })),
+      }),
+    });
+    if (!res.ok) {
+      errEl.textContent = '⚠ ' + (await readErr(res));
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Send email →';
+      return;
+    }
+    const data = await res.json();
+    const resultEl = document.getElementById('send-modal-result');
+    resultEl.innerHTML =
+      '<strong style="color:var(--brand-green)">✓ Magic-link emailed to ' + escapeHtml(data.client_email) + '</strong>'
+      + '<div style="margin-top:4px;font-size:12px">' + escapeHtml(data.cameras_count) + ' camera(s) queued · expires '
+      + new Date(data.expires_at).toLocaleDateString() + '</div>'
+      + '<code>' + escapeHtml(data.public_url) + '</code>'
+      + '<button class="copy-btn" id="cr-copy-btn">Copy link</button>';
+    resultEl.style.display = 'block';
+    document.getElementById('cr-copy-btn').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(data.public_url);
+        const cb = document.getElementById('cr-copy-btn');
+        cb.classList.add('copied'); cb.textContent = 'Copied';
+        setTimeout(() => { cb.classList.remove('copied'); cb.textContent = 'Copy link'; }, 1500);
+      } catch (_) {}
+    };
+    document.getElementById('send-cancel-btn').textContent = 'Close';
+    btn.style.display = 'none';
+  } catch (e) {
+    errEl.textContent = '⚠ Request failed: ' + (e.message || e);
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Send email →';
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('send-modal').classList.contains('active')) {
+    closeSendModal();
+  }
 });
 </script>
 </body>

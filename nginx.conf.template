@@ -59,6 +59,19 @@ server {
         proxy_set_header Content-Type $http_content_type;
     }
 
+    # Camera Review — admin kickoff from internal Camera View. Creates
+    # client-facing sessions; X-Auth-Request-Email attributes the creator.
+    location /api/camera-review/ {
+        proxy_pass http://cse-platform:8000/v1/camera-review/;
+        proxy_set_header Authorization "Bearer ${PROXY_API_KEY}";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Auth-Request-Email $http_x_auth_request_email;
+        proxy_set_header X-Forwarded-Email $http_x_forwarded_email;
+        proxy_set_header Content-Type $http_content_type;
+    }
+
     location / {
         root /usr/share/nginx/internal;
         index index.html index.htm;
@@ -93,6 +106,36 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Camera Review — public client-facing endpoints. No proxy key; the
+    # backend gates writes behind a magic-link-issued session cookie.
+    # Submit can carry a base64 PNG blob so raise the body limit.
+    location /api/public/camera-review/ {
+        proxy_pass http://cse-platform:8000/v1/public/camera-review/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Content-Type $http_content_type;
+        client_max_body_size 16m;
+    }
+
+    # Permanent composite PNG download — part of the public camera-review
+    # flow. Served off the same session path for a clean URL in Linear.
+    location ~ ^/camera-review/composite\.png$ {
+        proxy_pass http://cse-platform:8000/v1/public/camera-review/$arg_s/composite.png;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Camera Review client page. One static HTML handles every state
+    # (verify → review → submitted) by reading ?s / ?t / ?view query
+    # params in JS.
+    location = /camera-review {
+        root /usr/share/nginx/external;
+        try_files /camera-review.html =404;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
     }
 
     location / {

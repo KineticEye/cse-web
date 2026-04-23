@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Review · CompScience</title>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-green: #00C57B;
+      --brand-green-700: #00A366;
+      --brand-green-10: rgba(0,197,123,0.10);
+      --extra-light-green: #F0FDF7;
+      --blue-midnight: #01232C;
+      --grey-100: #F8F9FA;
+      --grey-200: #EDEEF0;
+      --grey-300: #E1E5E5;
+      --grey-400: #C6CBCC;
+      --grey-500: #949899;
+      --grey-600: #4E4E4E;
+      --black: #1A1A1A;
+      --danger: #B91C1C;
+      --danger-bg: #FEE2E2;
+      --danger-border: #FCA5A5;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Spline Sans", sans-serif;
+      background: var(--grey-100);
+      color: var(--black);
+      padding: 32px 20px 80px;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+
+    header.brand {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 18px; margin-bottom: 20px;
+      border-bottom: 1px solid var(--grey-300);
+    }
+    header.brand .logo { font-size: 18px; font-weight: 600; color: var(--blue-midnight); }
+    header.brand .logo span { color: var(--brand-green); }
+    header.brand .sep { flex: 1; }
+    header.brand .tag { font-size: 12px; color: var(--grey-500); }
+
+    .title { font-size: 22px; font-weight: 600; color: var(--blue-midnight); margin-bottom: 6px; }
+    .sub { font-size: 13px; color: var(--grey-500); margin-bottom: 20px; }
+
+    .card {
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      padding: 24px;
+    }
+    .card p + p { margin-top: 10px; }
+    .card strong { color: var(--blue-midnight); }
+
+    .btn {
+      padding: 10px 18px;
+      background: var(--brand-green);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .btn:hover { background: var(--brand-green-700); }
+    .btn:disabled { background: var(--grey-400); cursor: not-allowed; }
+    .btn.ghost {
+      background: transparent;
+      color: var(--grey-600);
+      border: 1px solid var(--grey-300);
+    }
+    .btn.ghost:hover { color: var(--brand-green); border-color: var(--brand-green); }
+    .btn.small { padding: 6px 12px; font-size: 12px; }
+
+    .err {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 6px;
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    .loading { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; gap: 14px; }
+    .spin {
+      width: 28px; height: 28px;
+      border: 2px solid var(--grey-300);
+      border-top-color: var(--brand-green);
+      border-radius: 50%;
+      animation: sp 0.75s linear infinite;
+    }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    .loading p { font-size: 13px; color: var(--grey-500); }
+
+    .phase { display: none; }
+    .phase.active { display: block; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+      border: 1px solid;
+    }
+    .pill.keep { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+    .pill.drop { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+
+    .review-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    .bulk-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .bulk-count { font-size: 11px; color: var(--grey-500); white-space: nowrap; margin-left: auto; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .thumb {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--grey-300);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s, opacity 0.2s;
+      background: white;
+    }
+    .thumb:hover { transform: scale(1.02); }
+    .thumb.keep { border-color: var(--brand-green); }
+    .thumb.drop { border-color: var(--grey-300); opacity: 0.55; }
+    .thumb img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--grey-100); }
+    .thumb .tlbl {
+      padding: 6px 8px;
+      font-size: 12px;
+      color: var(--grey-600);
+      text-align: center;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+      background: white;
+      border-top: 1px solid var(--grey-300);
+    }
+    .thumb.keep .tlbl { color: var(--brand-green); font-weight: 600; }
+    .thumb .dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: white;
+    }
+    .dot.keep { background: var(--brand-green); }
+    .dot.drop { background: var(--grey-500); }
+
+    .sticky-actions {
+      position: sticky; bottom: 12px;
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      flex-wrap: wrap;
+    }
+    .sticky-actions .spacer { flex: 1; }
+    .sticky-actions .note { font-size: 12px; color: var(--grey-500); }
+
+    .confirm-card { text-align: center; padding: 40px 24px; }
+    .confirm-card .check {
+      width: 56px; height: 56px; margin: 0 auto 14px;
+      border-radius: 50%;
+      background: var(--extra-light-green);
+      color: var(--brand-green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700;
+    }
+    .confirm-card h2 { font-size: 20px; font-weight: 600; color: var(--blue-midnight); margin-bottom: 8px; }
+    .confirm-card p { font-size: 13px; color: var(--grey-600); margin-bottom: 16px; line-height: 1.5; }
+
+    .result-composite { max-width: 100%; display: block; margin: 16px 0; border: 1px solid var(--grey-300); border-radius: 8px; background: white; }
+
+    canvas#canvas { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="brand">
+      <div class="logo">Comp<span>Science</span></div>
+      <div class="sep"></div>
+      <div class="tag">Camera Review</div>
+    </header>
+
+    <!-- LOADING -->
+    <section id="phase-loading" class="phase active">
+      <div class="loading">
+        <div class="spin"></div>
+        <p id="loading-msg">Loading…</p>
+      </div>
+    </section>
+
+    <!-- ERROR / GATE -->
+    <section id="phase-gate" class="phase">
+      <div class="card">
+        <h1 class="title" id="gate-title">Can't open this review</h1>
+        <p id="gate-msg"></p>
+        <p style="margin-top:14px;font-size:13px;color:var(--grey-500)">
+          If you need a new link, reply to the CompScience team or the person who sent you this invitation.
+        </p>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section id="phase-review" class="phase">
+      <div class="review-head">
+        <div>
+          <h1 class="title">Select cameras for CompScience to cover</h1>
+          <p class="sub" id="review-sub"></p>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <span class="pill keep" id="kept-count">&#10003; 0 selected</span>
+        </div>
+      </div>
+      <div class="bulk-bar">
+        <button class="btn ghost small" onclick="bulkSet('keep')">Select all</button>
+        <button class="btn ghost small" onclick="bulkSet('drop')">Deselect all</button>
+        <button class="btn ghost small" onclick="invertAll()">Invert</button>
+        <span class="bulk-count" id="grid-count"></span>
+      </div>
+      <div class="grid" id="review-grid"></div>
+      <div class="sticky-actions">
+        <span class="note">Click a camera to toggle. When you're done, submit your selection.</span>
+        <div class="spacer"></div>
+        <button class="btn" id="submit-btn" onclick="submitSelection()">Submit selection &rarr;</button>
+      </div>
+      <div id="review-error" class="err" style="display:none"></div>
+    </section>
+
+    <!-- CONFIRMATION -->
+    <section id="phase-done" class="phase">
+      <div class="card confirm-card">
+        <div class="check">&#10003;</div>
+        <h2>Selection submitted</h2>
+        <p id="done-sub"></p>
+        <p style="font-size:12px;color:var(--grey-500)">
+          You can close this tab. Your CompScience contact has been notified.
+        </p>
+        <p style="margin-top:18px">
+          <a class="btn ghost" id="done-view-link" href="#">View your selection</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- READ-ONLY RESULT -->
+    <section id="phase-result" class="phase">
+      <h1 class="title" id="result-title">Camera selection</h1>
+      <p class="sub" id="result-sub"></p>
+      <div class="card">
+        <p><strong id="result-kept">0 of 0</strong> cameras selected</p>
+        <p id="result-when" style="margin-top:4px;font-size:12px;color:var(--grey-500)"></p>
+        <img id="result-composite" class="result-composite" alt="composite" />
+        <div class="grid" id="result-grid"></div>
+      </div>
+    </section>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+<script>
+const API_BASE = '/api/public/camera-review';
+const PHASES = ['loading', 'gate', 'review', 'done', 'result'];
+const params = new URLSearchParams(location.search);
+const sessionId = (params.get('s') || '').trim();
+const magicToken = (params.get('t') || '').trim();
+const viewMode = params.get('view') === '1';
+
+let cams = [];
+let meta = null;
+
+function showPhase(p) {
+  for (const ph of PHASES) {
+    document.getElementById('phase-' + ph).classList.toggle('active', ph === p);
+  }
+}
+
+function setLoadingMsg(msg) { document.getElementById('loading-msg').textContent = msg; }
+
+function gate(title, msg) {
+  document.getElementById('gate-title').textContent = title;
+  document.getElementById('gate-msg').textContent = msg;
+  showPhase('gate');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function readErr(res) {
+  try {
+    const j = await res.json();
+    return j.detail || j.error || (res.status + ' ' + res.statusText);
+  } catch (_) { return res.status + ' ' + res.statusText; }
+}
+
+async function main() {
+  if (!sessionId) { gate('Invalid link', 'This review link is missing a session id.'); return; }
+  if (viewMode) { await loadResult(); return; }
+
+  setLoadingMsg('Loading review session…');
+  let metaRes;
+  try {
+    metaRes = await fetch(API_BASE + '/' + encodeURIComponent(sessionId));
+  } catch (e) { gate("Can't reach the server", 'Please try again in a moment.'); return; }
+  if (metaRes.status === 404) { gate('Review not found', 'This link is invalid or the session has been removed.'); return; }
+  if (!metaRes.ok) { gate("Can't load review", await readErr(metaRes)); return; }
+  meta = await metaRes.json();
+
+  if (meta.submitted) { await loadResult(); return; }
+  if (meta.expired) { gate('Link expired', 'This review link is older than 7 days. Please ask CompScience for a fresh one.'); return; }
+
+  if (magicToken) {
+    setLoadingMsg('Verifying your link…');
+    const v = await fetch(API_BASE + '/' + encodeURIComponent(sessionId) + '/verify?t=' + encodeURIComponent(magicToken), {
+      method: 'POST', credentials: 'include',
+    });
+    if (!v.ok) {
+      if (v.status === 410) gate('Link expired', 'This link is no longer valid. Please ask CompScience to send a new one.');
+      else if (v.status === 403) gate('Invalid link', 'This link has already been used or the token is incorrect.');
+      else gate("Can't verify link", await readErr(v));
+      return;
+    }
+    // Drop ?t from the URL so reload doesn't try to re-verify.
+    const clean = location.pathname + '?s=' + encodeURIComponent(sessionId);
+    history.replaceState({}, '', clean);
+  }
+
+  await loadCameras();
+}
+
+async function loadCameras() {
+  setLoadingMsg('Loading camera screenshots…');
+  let res;
+  try { res = await fetch(API_BASE + '/' + encodeURIComponent(sessionId) + '/cameras', { credentials: 'include' }); }
+  catch (e) { gate("Can't reach the server", 'Please try again in a moment.'); return; }
+  if (res.status === 401) { gate('Not verified', 'Please reopen the link in your email.'); return; }
+  if (res.status === 410) { gate('Already submitted', 'This selection has already been submitted.'); return; }
+  if (!res.ok) { gate("Can't load cameras", await readErr(res)); return; }
+  const data = await res.json();
+  cams = (data.cameras || []).map(c => ({ ...c, status: 'pending' }));
+  if (!cams.length) { gate('No cameras', 'There are no cameras in this review. Please contact CompScience.'); return; }
+
+  document.getElementById('review-sub').textContent =
+    (data.contact_label || data.linear_issue_id) + ' · ' + cams.length + ' camera' + (cams.length !== 1 ? 's' : '');
+  buildReviewGrid();
+  showPhase('review');
+}
+
+function buildReviewGrid() {
+  const kept = cams.filter(c => c.status === 'keep').length;
+  document.getElementById('kept-count').textContent = '\u2713 ' + kept + ' selected';
+  document.getElementById('grid-count').textContent = cams.length + ' camera' + (cams.length !== 1 ? 's' : '');
+  document.getElementById('submit-btn').disabled = kept === 0;
+
+  const frag = document.createDocumentFragment();
+  cams.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb ' + c.status;
+    div.dataset.i = i;
+    div.onclick = () => toggleCam(i);
+    const dotCls = c.status === 'keep' ? 'keep' : 'drop';
+    const dotChar = c.status === 'keep' ? '\u2713' : '\u2022';
+    div.innerHTML = '<img src="' + escapeHtml(c.url) + '" alt="" onerror="this.style.background=\'var(--grey-100)\'" />'
+      + '<div class="tlbl">' + escapeHtml(c.name) + '</div>'
+      + '<div class="dot ' + dotCls + '">' + dotChar + '</div>';
+    frag.appendChild(div);
+  });
+  const grid = document.getElementById('review-grid');
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+}
+
+function toggleCam(i) {
+  cams[i].status = cams[i].status === 'keep' ? 'drop' : 'keep';
+  buildReviewGrid();
+}
+
+function bulkSet(status) {
+  cams.forEach(c => { c.status = status; });
+  buildReviewGrid();
+}
+
+function invertAll() {
+  cams.forEach(c => { c.status = c.status === 'keep' ? 'drop' : 'keep'; });
+  buildReviewGrid();
+}
+
+// Composite generation — mirrors the internal Camera View, light palette only.
+async function generateCompositePNG() {
+  const sel = cams.filter(c => c.status === 'keep');
+  const cols = sel.length <= 2 ? 1 : sel.length <= 4 ? 2 : 3;
+  const rows = Math.ceil(sel.length / cols);
+  const CW = 520, CH = 292, PAD = 10, LH = 38, HDR = 64;
+  const C = {
+    bg: '#F8F9FA', headerBg: '#FFFFFF', headerLine: '#E1E5E5',
+    titleDark: '#01232C', sub: '#4E4E4E', cellBg: '#FFFFFF',
+    cellBorder: '#E1E5E5', labelText: '#01232C', labelKeep: '#00C57B',
+  };
+
+  const canvas = document.getElementById('canvas');
+  canvas.width = cols * (CW + PAD) + PAD;
+  canvas.height = rows * (CH + LH + PAD) + PAD + HDR;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = C.headerBg; ctx.fillRect(0, 0, canvas.width, HDR);
+  ctx.strokeStyle = C.headerLine; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, HDR); ctx.lineTo(canvas.width, HDR); ctx.stroke();
+  ctx.fillStyle = C.titleDark;
+  ctx.font = "bold 14px 'Spline Sans', sans-serif"; ctx.textAlign = 'left';
+  ctx.fillText((meta.contact_label || meta.linear_issue_id) + '  ·  Client camera selection', 16, HDR - 24);
+  ctx.fillStyle = C.sub; ctx.font = "12px 'Spline Sans', sans-serif";
+  ctx.fillText(sel.length + ' of ' + cams.length + ' selected · ' + new Date().toLocaleDateString(), 16, HDR - 8);
+
+  const loadImg = (url) => new Promise((resolve) => {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img); img.onerror = () => resolve(null);
+    img.src = url;
+  });
+
+  for (let ii = 0; ii < sel.length; ii++) {
+    const col = ii % cols, row = Math.floor(ii / cols);
+    const x = PAD + col * (CW + PAD);
+    const y = HDR + PAD + row * (CH + LH + PAD);
+    ctx.fillStyle = C.cellBg; ctx.fillRect(x, y, CW, CH);
+    ctx.strokeStyle = C.cellBorder; ctx.lineWidth = 1; ctx.strokeRect(x, y, CW, CH);
+    const img = await loadImg(sel[ii].url);
+    if (img) {
+      try {
+        const s = Math.min(CW / img.width, CH / img.height);
+        ctx.drawImage(img, x + (CW - img.width * s) / 2, y + (CH - img.height * s) / 2, img.width * s, img.height * s);
+      } catch (_) {}
+    } else {
+      ctx.fillStyle = C.sub; ctx.font = "12px 'Spline Sans', sans-serif"; ctx.textAlign = 'center';
+      ctx.fillText('NO PREVIEW', x + CW / 2, y + CH / 2);
+    }
+    ctx.fillStyle = C.cellBg; ctx.fillRect(x, y + CH, CW, LH);
+    ctx.strokeStyle = C.cellBorder; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, y + CH); ctx.lineTo(x + CW, y + CH); ctx.stroke();
+    ctx.fillStyle = C.labelKeep;
+    ctx.font = "600 12px 'Spline Sans', sans-serif"; ctx.textAlign = 'center';
+    ctx.fillText(sel[ii].name, x + CW / 2, y + CH + 25);
+  }
+
+  // Return base64 (no data:image/png;base64, prefix).
+  return canvas.toDataURL('image/png').split(',')[1];
+}
+
+async function submitSelection() {
+  const sel = cams.filter(c => c.status === 'keep');
+  if (!sel.length) { showReviewError('Pick at least one camera before submitting.'); return; }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  let png_b64;
+  try { png_b64 = await generateCompositePNG(); }
+  catch (e) { showReviewError('Could not build the composite image: ' + (e.message || e)); btn.disabled = false; btn.textContent = 'Submit selection →'; return; }
+
+  try {
+    const res = await fetch(API_BASE + '/' + encodeURIComponent(sessionId) + '/submit', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        selection: sel.map(c => c.id),
+        composite_png_b64: png_b64,
+      }),
+    });
+    if (!res.ok) {
+      showReviewError(await readErr(res));
+      btn.disabled = false; btn.textContent = 'Submit selection →';
+      return;
+    }
+    const data = await res.json();
+    document.getElementById('done-sub').textContent =
+      'Thanks! You selected ' + data.kept + ' of ' + data.total + ' cameras.';
+    const viewHref = location.pathname + '?s=' + encodeURIComponent(sessionId) + '&view=1';
+    document.getElementById('done-view-link').href = viewHref;
+    showPhase('done');
+  } catch (e) {
+    showReviewError('Submit failed: ' + (e.message || e));
+    btn.disabled = false; btn.textContent = 'Submit selection →';
+  }
+}
+
+function showReviewError(msg) {
+  const el = document.getElementById('review-error');
+  el.textContent = '\u26A0 ' + msg;
+  el.style.display = 'block';
+}
+
+async function loadResult() {
+  setLoadingMsg('Loading your submission…');
+  let res;
+  try { res = await fetch(API_BASE + '/' + encodeURIComponent(sessionId) + '/result'); }
+  catch (e) { gate("Can't reach the server", 'Please try again in a moment.'); return; }
+  if (res.status === 404) { gate('Not submitted yet', 'This selection has not been submitted yet.'); return; }
+  if (!res.ok) { gate("Can't load submission", await readErr(res)); return; }
+  const data = await res.json();
+
+  document.getElementById('result-title').textContent =
+    (data.contact_label || data.linear_issue_id) + ' — camera selection';
+  document.getElementById('result-sub').textContent =
+    'Linked to ' + data.linear_issue_id + ' · submitted by ' + data.client_email_hint;
+  document.getElementById('result-kept').textContent = data.kept + ' of ' + data.total;
+  const when = data.submitted_at ? new Date(data.submitted_at).toLocaleString() : '';
+  document.getElementById('result-when').textContent = when ? 'Submitted ' + when : '';
+  if (data.composite_url) document.getElementById('result-composite').src = data.composite_url;
+  else document.getElementById('result-composite').style.display = 'none';
+
+  const grid = document.getElementById('result-grid');
+  const frag = document.createDocumentFragment();
+  (data.cameras || []).forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'thumb ' + (c.kept ? 'keep' : 'drop');
+    div.innerHTML =
+      '<div style="aspect-ratio:16/9;background:var(--grey-100);display:flex;align-items:center;justify-content:center;color:var(--grey-500);font-size:11px">' + (c.kept ? 'KEPT' : '') + '</div>'
+      + '<div class="tlbl">' + escapeHtml(c.name || c.id) + '</div>'
+      + '<div class="dot ' + (c.kept ? 'keep' : 'drop') + '">' + (c.kept ? '\u2713' : '\u2022') + '</div>';
+    frag.appendChild(div);
+  });
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+
+  showPhase('result');
+}
+
+main();
+</script>
+</body>
+</html>
