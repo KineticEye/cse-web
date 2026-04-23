@@ -388,6 +388,92 @@
     }
     .progress-dot.active { background: var(--brand-green); }
 
+    /* Readiness gate statement */
+    .statement-box {
+      padding: 28px 32px;
+      background: var(--green-50);
+      border: 2px solid var(--brand-green);
+      border-radius: 12px;
+      margin-bottom: 32px;
+    }
+    .statement-box p {
+      font-size: 16px;
+      color: var(--grey-800);
+      line-height: 1.7;
+      font-weight: 500;
+    }
+
+    /* Address autocomplete */
+    .autocomplete-wrapper { position: relative; }
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      max-height: 320px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+    }
+    .suggestion {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--grey-200);
+    }
+    .suggestion:last-child { border-bottom: none; }
+    .suggestion:hover { background: var(--grey-100); }
+    .suggestion-main {
+      font-size: 15px;
+      color: var(--grey-800);
+      font-weight: 500;
+    }
+    .suggestion-sub {
+      font-size: 13px;
+      color: var(--grey-500);
+      margin-top: 2px;
+    }
+    .autocomplete-hint {
+      font-size: 13px;
+      color: var(--grey-500);
+      margin-top: 6px;
+    }
+
+    /* Blocked page */
+    .blocked-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: var(--grey-100);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      color: var(--grey-600);
+    }
+    .blocked-page { text-align: center; }
+    .blocked-page .contact-card {
+      padding: 24px;
+      background: var(--grey-100);
+      border: 1px solid var(--grey-300);
+      border-radius: 12px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .blocked-page .contact-card p {
+      font-size: 15px;
+      color: var(--grey-700);
+      line-height: 1.6;
+    }
+    .blocked-page .contact-card a {
+      color: var(--brand-green);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
     @media (max-width: 640px) {
       h1 { font-size: 28px; }
       .summary-grid { grid-template-columns: 1fr; }
@@ -403,6 +489,7 @@
     <div class="progress-dot active" id="prog1"></div>
     <div class="progress-dot" id="prog2"></div>
     <div class="progress-dot" id="prog3"></div>
+    <div class="progress-dot" id="prog4"></div>
   </div>
 
   <form id="vmsForm" novalidate>
@@ -443,12 +530,181 @@
       </div>
     </div>
 
-    <!-- Step 2: Shipping & Site -->
+    <!-- Step 2: Readiness gate -->
     <div class="step" id="step2">
+      <h1>One quick <span>readiness check</span>...</h1>
+      <p class="subtitle">Before we proceed, please confirm the following about your facility.</p>
+
+      <div class="statement-box">
+        <p>I confirm that my facility has IP cameras focused on work areas with RTSP streaming capability, and that the camera network can be configured for the internet access required by the VMS — including any necessary firewall or network changes.</p>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-back" onclick="goToStep(1)">Back</button>
+        <button type="button" class="btn btn-secondary" onclick="goToStep('blocked')">No</button>
+        <button type="button" class="btn btn-primary" onclick="goToStep(3)">I Agree</button>
+      </div>
+    </div>
+
+    <!-- Blocked: readiness not confirmed -->
+    <div class="step" id="stepBlocked">
+      <div class="blocked-page">
+        <div class="blocked-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h1>We're <span>sorry</span>...</h1>
+        <p class="subtitle">There's a little more work to do before we can deliver the value you're expecting from the VMS. Your CompScience representative can help you plan camera coverage and network access so we can get you set up for success.</p>
+
+        <div class="contact-card">
+          <p><strong>Please contact your CompScience representative</strong> to discuss next steps.<br>
+          Not sure who to contact? Email <a href="mailto:cse@compscience.support">cse@compscience.support</a> and we'll connect you.</p>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-back" onclick="goToStep(2)">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Shipping & Site -->
+    <div class="step" id="step3">
       <h1>Where should we send your <span>VMS Device</span>?</h1>
-      <p class="subtitle">Tell us about your installation site and shipping details.</p>
+      <p class="subtitle">Start with your country, then let us help you complete the address.</p>
 
       <div class="fields">
+        <div>
+          <select id="country" required>
+            <option value="">Select country</option>
+            <option value="United States" data-iso="us" selected>United States</option>
+            <option value="Canada" data-iso="ca">Canada</option>
+            <option value="Mexico" data-iso="mx">Mexico</option>
+            <option value="United Kingdom" data-iso="gb">United Kingdom</option>
+            <option value="Ireland" data-iso="ie">Ireland</option>
+            <option value="Germany" data-iso="de">Germany</option>
+            <option value="France" data-iso="fr">France</option>
+            <option value="Spain" data-iso="es">Spain</option>
+            <option value="Italy" data-iso="it">Italy</option>
+            <option value="Netherlands" data-iso="nl">Netherlands</option>
+            <option value="Belgium" data-iso="be">Belgium</option>
+            <option value="Luxembourg" data-iso="lu">Luxembourg</option>
+            <option value="Switzerland" data-iso="ch">Switzerland</option>
+            <option value="Austria" data-iso="at">Austria</option>
+            <option value="Portugal" data-iso="pt">Portugal</option>
+            <option value="Sweden" data-iso="se">Sweden</option>
+            <option value="Norway" data-iso="no">Norway</option>
+            <option value="Denmark" data-iso="dk">Denmark</option>
+            <option value="Finland" data-iso="fi">Finland</option>
+            <option value="Iceland" data-iso="is">Iceland</option>
+            <option value="Poland" data-iso="pl">Poland</option>
+            <option value="Czech Republic" data-iso="cz">Czech Republic</option>
+            <option value="Slovakia" data-iso="sk">Slovakia</option>
+            <option value="Hungary" data-iso="hu">Hungary</option>
+            <option value="Romania" data-iso="ro">Romania</option>
+            <option value="Bulgaria" data-iso="bg">Bulgaria</option>
+            <option value="Greece" data-iso="gr">Greece</option>
+            <option value="Croatia" data-iso="hr">Croatia</option>
+            <option value="Slovenia" data-iso="si">Slovenia</option>
+            <option value="Serbia" data-iso="rs">Serbia</option>
+            <option value="Bosnia and Herzegovina" data-iso="ba">Bosnia and Herzegovina</option>
+            <option value="Montenegro" data-iso="me">Montenegro</option>
+            <option value="North Macedonia" data-iso="mk">North Macedonia</option>
+            <option value="Albania" data-iso="al">Albania</option>
+            <option value="Estonia" data-iso="ee">Estonia</option>
+            <option value="Latvia" data-iso="lv">Latvia</option>
+            <option value="Lithuania" data-iso="lt">Lithuania</option>
+            <option value="Ukraine" data-iso="ua">Ukraine</option>
+            <option value="Moldova" data-iso="md">Moldova</option>
+            <option value="Belarus" data-iso="by">Belarus</option>
+            <option value="Russia" data-iso="ru">Russia</option>
+            <option value="Turkey" data-iso="tr">Turkey</option>
+            <option value="Cyprus" data-iso="cy">Cyprus</option>
+            <option value="Malta" data-iso="mt">Malta</option>
+            <option value="Monaco" data-iso="mc">Monaco</option>
+            <option value="Liechtenstein" data-iso="li">Liechtenstein</option>
+            <option value="Andorra" data-iso="ad">Andorra</option>
+            <option value="San Marino" data-iso="sm">San Marino</option>
+            <option value="Vatican City" data-iso="va">Vatican City</option>
+            <option value="Australia" data-iso="au">Australia</option>
+            <option value="New Zealand" data-iso="nz">New Zealand</option>
+            <option value="Japan" data-iso="jp">Japan</option>
+            <option value="South Korea" data-iso="kr">South Korea</option>
+            <option value="China" data-iso="cn">China</option>
+            <option value="Taiwan" data-iso="tw">Taiwan</option>
+            <option value="Hong Kong" data-iso="hk">Hong Kong</option>
+            <option value="Singapore" data-iso="sg">Singapore</option>
+            <option value="Malaysia" data-iso="my">Malaysia</option>
+            <option value="Thailand" data-iso="th">Thailand</option>
+            <option value="Vietnam" data-iso="vn">Vietnam</option>
+            <option value="Philippines" data-iso="ph">Philippines</option>
+            <option value="Indonesia" data-iso="id">Indonesia</option>
+            <option value="India" data-iso="in">India</option>
+            <option value="Pakistan" data-iso="pk">Pakistan</option>
+            <option value="Bangladesh" data-iso="bd">Bangladesh</option>
+            <option value="Sri Lanka" data-iso="lk">Sri Lanka</option>
+            <option value="Nepal" data-iso="np">Nepal</option>
+            <option value="Brazil" data-iso="br">Brazil</option>
+            <option value="Argentina" data-iso="ar">Argentina</option>
+            <option value="Chile" data-iso="cl">Chile</option>
+            <option value="Colombia" data-iso="co">Colombia</option>
+            <option value="Peru" data-iso="pe">Peru</option>
+            <option value="Ecuador" data-iso="ec">Ecuador</option>
+            <option value="Uruguay" data-iso="uy">Uruguay</option>
+            <option value="Paraguay" data-iso="py">Paraguay</option>
+            <option value="Bolivia" data-iso="bo">Bolivia</option>
+            <option value="Venezuela" data-iso="ve">Venezuela</option>
+            <option value="Costa Rica" data-iso="cr">Costa Rica</option>
+            <option value="Panama" data-iso="pa">Panama</option>
+            <option value="Guatemala" data-iso="gt">Guatemala</option>
+            <option value="Honduras" data-iso="hn">Honduras</option>
+            <option value="El Salvador" data-iso="sv">El Salvador</option>
+            <option value="Nicaragua" data-iso="ni">Nicaragua</option>
+            <option value="Dominican Republic" data-iso="do">Dominican Republic</option>
+            <option value="Jamaica" data-iso="jm">Jamaica</option>
+            <option value="Trinidad and Tobago" data-iso="tt">Trinidad and Tobago</option>
+            <option value="Bahamas" data-iso="bs">Bahamas</option>
+            <option value="Barbados" data-iso="bb">Barbados</option>
+            <option value="Puerto Rico" data-iso="pr">Puerto Rico</option>
+            <option value="South Africa" data-iso="za">South Africa</option>
+            <option value="Egypt" data-iso="eg">Egypt</option>
+            <option value="Morocco" data-iso="ma">Morocco</option>
+            <option value="Tunisia" data-iso="tn">Tunisia</option>
+            <option value="Algeria" data-iso="dz">Algeria</option>
+            <option value="Nigeria" data-iso="ng">Nigeria</option>
+            <option value="Kenya" data-iso="ke">Kenya</option>
+            <option value="Ghana" data-iso="gh">Ghana</option>
+            <option value="Ethiopia" data-iso="et">Ethiopia</option>
+            <option value="Tanzania" data-iso="tz">Tanzania</option>
+            <option value="Uganda" data-iso="ug">Uganda</option>
+            <option value="Rwanda" data-iso="rw">Rwanda</option>
+            <option value="Senegal" data-iso="sn">Senegal</option>
+            <option value="Ivory Coast" data-iso="ci">Ivory Coast</option>
+            <option value="Cameroon" data-iso="cm">Cameroon</option>
+            <option value="United Arab Emirates" data-iso="ae">United Arab Emirates</option>
+            <option value="Saudi Arabia" data-iso="sa">Saudi Arabia</option>
+            <option value="Qatar" data-iso="qa">Qatar</option>
+            <option value="Kuwait" data-iso="kw">Kuwait</option>
+            <option value="Bahrain" data-iso="bh">Bahrain</option>
+            <option value="Oman" data-iso="om">Oman</option>
+            <option value="Jordan" data-iso="jo">Jordan</option>
+            <option value="Lebanon" data-iso="lb">Lebanon</option>
+            <option value="Israel" data-iso="il">Israel</option>
+            <option value="Iraq" data-iso="iq">Iraq</option>
+            <option value="Iran" data-iso="ir">Iran</option>
+            <option value="Kazakhstan" data-iso="kz">Kazakhstan</option>
+            <option value="Uzbekistan" data-iso="uz">Uzbekistan</option>
+            <option value="Georgia" data-iso="ge">Georgia</option>
+            <option value="Armenia" data-iso="am">Armenia</option>
+            <option value="Azerbaijan" data-iso="az">Azerbaijan</option>
+          </select>
+          <div class="error-msg" id="err-country"></div>
+        </div>
+
+        <div class="autocomplete-wrapper">
+          <input type="text" id="addressLookup" placeholder="Start typing your address…" autocomplete="off">
+          <div class="suggestions" id="addressSuggestions"></div>
+          <div class="autocomplete-hint">We'll pre-fill the fields below — you can edit anything.</div>
+        </div>
+
         <div>
           <input type="text" id="street" placeholder="Street address" required>
           <div class="error-msg" id="err-street"></div>
@@ -462,17 +718,13 @@
             <div class="error-msg" id="err-city"></div>
           </div>
           <div>
-            <input type="text" id="state" placeholder="State" required>
+            <input type="text" id="state" placeholder="State / Region / Province" required>
             <div class="error-msg" id="err-state"></div>
           </div>
         </div>
         <div>
-          <input type="text" id="zip" placeholder="ZIP code" required>
+          <input type="text" id="zip" placeholder="ZIP / Postal code" required>
           <div class="error-msg" id="err-zip"></div>
-        </div>
-        <div>
-          <input type="text" id="country" placeholder="Country" required value="United States">
-          <div class="error-msg" id="err-country"></div>
         </div>
 
         <div class="section-divider">
@@ -483,20 +735,6 @@
               <div class="error-msg" id="err-siteName"></div>
             </div>
             <div>
-              <input type="number" id="cameraCount" placeholder="Number of cameras" min="1" required>
-              <div class="error-msg" id="err-cameraCount"></div>
-            </div>
-            <div>
-              <select id="networkEnvironment" required>
-                <option value="">Select network type</option>
-                <option>Managed corporate network</option>
-                <option>Basic office/retail network</option>
-                <option>Construction site / temporary network</option>
-                <option>Not sure</option>
-              </select>
-              <div class="error-msg" id="err-networkEnvironment"></div>
-            </div>
-            <div>
               <textarea id="specialInstructions" placeholder="Special delivery instructions (optional)" rows="4"></textarea>
             </div>
           </div>
@@ -504,13 +742,13 @@
       </div>
 
       <div class="btn-row">
-        <button type="button" class="btn btn-back" onclick="goToStep(1)">Back</button>
-        <button type="button" class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+        <button type="button" class="btn btn-back" onclick="goToStep(2)">Back</button>
+        <button type="button" class="btn btn-primary" onclick="goToStep(4)">Continue</button>
       </div>
     </div>
 
-    <!-- Step 3: Terms of Service -->
-    <div class="step" id="step3">
+    <!-- Step 4: Terms of Service -->
+    <div class="step" id="step4">
       <h1>One last thing, our <span>Terms of Service</span>.</h1>
       <p class="subtitle">Please review and accept our terms before we ship your device.</p>
 
@@ -530,14 +768,14 @@
       </div>
 
       <div class="btn-row">
-        <button type="button" class="btn btn-back" onclick="goToStep(2)">Back</button>
+        <button type="button" class="btn btn-back" onclick="goToStep(3)">Back</button>
         <button type="button" class="btn btn-primary" id="submitBtn" disabled onclick="submitForm()">Submit Request</button>
       </div>
     </div>
   </form>
 
-  <!-- Step 4: Confirmation -->
-  <div class="step" id="step4">
+  <!-- Step 5: Confirmation -->
+  <div class="step" id="step5">
     <div class="confirmation">
       <div class="check-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -627,16 +865,29 @@
 </div>
 
 <script>
+  // Geoapify autocomplete — key is referrer-restricted to *.compscience.support in the Geoapify dashboard.
+  const GEOAPIFY_KEY = '2d059fce455e43fabda7a69dc945ceb8';
+
   let currentStep = 1;
   let hasScrolledToBottom = false;
   let submittedData = null;
+  let autocompleteTimer = null;
 
   const fields = {
     1: ['firstName', 'lastName', 'email', 'phone', 'company', 'jobTitle'],
-    2: ['street', 'city', 'state', 'zip', 'country', 'siteName', 'cameraCount', 'networkEnvironment'],
+    2: [],
+    3: ['street', 'city', 'state', 'zip', 'country', 'siteName'],
   };
 
+  function getCurrentStepId() {
+    return currentStep === 'blocked' ? 'stepBlocked' : 'step' + currentStep;
+  }
+  function getStepId(step) {
+    return step === 'blocked' ? 'stepBlocked' : 'step' + step;
+  }
+
   function validate(step) {
+    if (typeof step !== 'number') return true;
     let valid = true;
     for (const id of fields[step] || []) {
       const el = document.getElementById(id);
@@ -645,11 +896,9 @@
       const val = el.value.trim();
       let msg = '';
       if (!val) {
-        msg = el.placeholder + ' is required';
+        msg = (el.getAttribute('placeholder') || 'This field') + ' is required';
       } else if (id === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
         msg = 'Invalid email address';
-      } else if (id === 'cameraCount' && (isNaN(val) || Number(val) < 1)) {
-        msg = 'Must have at least 1 camera';
       }
       if (msg) {
         el.classList.add('error');
@@ -664,20 +913,95 @@
   }
 
   function goToStep(step) {
-    if (step > currentStep && !validate(currentStep)) return;
-    document.getElementById('step' + currentStep).classList.remove('active');
-    document.getElementById('step' + step).classList.add('active');
+    if (typeof step === 'number' && typeof currentStep === 'number' && step > currentStep && !validate(currentStep)) return;
+    document.getElementById(getCurrentStepId()).classList.remove('active');
+    document.getElementById(getStepId(step)).classList.add('active');
     currentStep = step;
-    for (let i = 1; i <= 3; i++) {
-      document.getElementById('prog' + i).classList.toggle('active', i <= step);
+
+    const progressEl = document.querySelector('.progress');
+    if (step === 'blocked') {
+      progressEl.style.display = 'none';
+    } else {
+      progressEl.style.display = 'flex';
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('prog' + i).classList.toggle('active', i <= step);
+      }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    if (step === 3) {
+    if (step === 4) {
       const company = document.getElementById('company').value.trim();
       document.getElementById('companyEcho').textContent = company || 'your organization';
     }
   }
+
+  // Address autocomplete (Geoapify)
+  const addressLookup = document.getElementById('addressLookup');
+  const suggestionsEl = document.getElementById('addressSuggestions');
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function hideSuggestions() {
+    suggestionsEl.innerHTML = '';
+    suggestionsEl.style.display = 'none';
+  }
+
+  function renderSuggestions(results) {
+    if (!results.length) { hideSuggestions(); return; }
+    suggestionsEl.innerHTML = results.map((r, i) =>
+      '<div class="suggestion" data-idx="' + i + '">' +
+        '<div class="suggestion-main">' + escapeHtml(r.address_line1 || r.formatted || '') + '</div>' +
+        '<div class="suggestion-sub">' + escapeHtml(r.address_line2 || '') + '</div>' +
+      '</div>'
+    ).join('');
+    suggestionsEl.style.display = 'block';
+    Array.from(suggestionsEl.querySelectorAll('.suggestion')).forEach((el, i) => {
+      el.addEventListener('mousedown', (e) => { e.preventDefault(); selectSuggestion(results[i]); });
+    });
+  }
+
+  function selectSuggestion(r) {
+    addressLookup.value = r.formatted || '';
+    const streetParts = r.address_line1 || [r.housenumber, r.street].filter(Boolean).join(' ');
+    document.getElementById('street').value = streetParts || '';
+    document.getElementById('city').value = r.city || r.town || r.village || r.county || '';
+    document.getElementById('state').value = r.state_code || r.state || '';
+    document.getElementById('zip').value = r.postcode || '';
+    hideSuggestions();
+  }
+
+  async function fetchAddressSuggestions(query) {
+    const countrySelect = document.getElementById('country');
+    const iso = countrySelect.selectedOptions[0] && countrySelect.selectedOptions[0].dataset.iso;
+    const params = new URLSearchParams({
+      text: query,
+      format: 'json',
+      limit: '5',
+      apiKey: GEOAPIFY_KEY,
+    });
+    if (iso) params.set('filter', 'countrycode:' + iso);
+    try {
+      const resp = await fetch('https://api.geoapify.com/v1/geocode/autocomplete?' + params.toString());
+      if (!resp.ok) return;
+      const data = await resp.json();
+      renderSuggestions(data.results || []);
+    } catch (err) {
+      console.error('Address autocomplete failed', err);
+    }
+  }
+
+  addressLookup.addEventListener('input', (e) => {
+    const q = e.target.value.trim();
+    clearTimeout(autocompleteTimer);
+    if (q.length < 3) { hideSuggestions(); return; }
+    autocompleteTimer = setTimeout(() => fetchAddressSuggestions(q), 300);
+  });
+  addressLookup.addEventListener('blur', () => setTimeout(hideSuggestions, 150));
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.autocomplete-wrapper')) hideSuggestions();
+  });
 
   // ToS scroll detection
   document.getElementById('tosScroller').addEventListener('scroll', function () {
@@ -729,9 +1053,13 @@
         street: val('street'), suite: val('suite'),
         city: val('city'), state: val('state'),
         zip: val('zip'), country: val('country'),
-        siteName: val('siteName'), cameraCount: Number(val('cameraCount')),
-        networkEnvironment: val('networkEnvironment'),
+        siteName: val('siteName'),
         specialInstructions: val('specialInstructions'),
+      },
+      readinessAcknowledgement: {
+        acknowledged: true,
+        statement: 'Facility has IP cameras focused on work areas with RTSP streaming capability, and the camera network can be configured for the internet access required by the VMS — including any necessary firewall or network changes.',
+        acknowledgedAt: now,
       },
       tosAcceptance: {
         accepted: true, tosVersion: '2.0', tosEffectiveDate: '2026-04-15',
@@ -768,9 +1096,8 @@
       s.city + ', ' + s.state + ' ' + s.zip + '<br>' + s.country;
 
     document.getElementById('summarySite').innerHTML =
-      '<strong>Site:</strong> ' + s.siteName + '<br>' +
-      '<strong>Cameras:</strong> ' + s.cameraCount + '<br>' +
-      '<strong>Network:</strong> ' + s.networkEnvironment;
+      '<strong>Site:</strong> ' + s.siteName +
+      (s.specialInstructions ? '<br><strong>Notes:</strong> ' + s.specialInstructions : '');
 
     const fmtDate = new Date(now).toLocaleString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric',
@@ -782,8 +1109,8 @@
       '<span style="font-family:monospace;font-size:12px">' + acceptanceId + '</span>';
 
     // Show confirmation
-    document.getElementById('step3').classList.remove('active');
-    document.getElementById('step4').classList.add('active');
+    document.getElementById('step4').classList.remove('active');
+    document.getElementById('step5').classList.add('active');
     document.querySelector('.progress').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
