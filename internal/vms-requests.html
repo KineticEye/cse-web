@@ -220,8 +220,11 @@ function renderHsContact(r) {
 
 function renderHsDeal(r) {
   const id = r.hs_deal_id;
-  if (!id) return '<span class="muted">—</span>';
-  return `<a class="hs-link" href="${esc(hsDealUrl(id))}" target="_blank" title="Open deal in HubSpot">${esc(id)}</a>`;
+  if (!id) {
+    return `<button class="btn-mini" onclick="promptHsDeal('${esc(r.confirmation_number)}','')">link</button>`;
+  }
+  return `<a class="hs-link" href="${esc(hsDealUrl(id))}" target="_blank" title="Open deal in HubSpot">${esc(id)}</a>
+          <button class="btn-mini" onclick="promptHsDeal('${esc(r.confirmation_number)}','${esc(id)}')" title="Edit deal id">&#9998;</button>`;
 }
 
 function renderHubspotCell(r) {
@@ -337,14 +340,39 @@ async function promptHs(confNum, current) {
   if (input === null) return; // cancelled
   const id = extractHsContactId(input);
   if (!id) { alert('Could not extract a HubSpot contact ID from that input.'); return; }
+  await patchVms(confNum, { hs_contact_id: id });
+}
+
+// Mirror of promptHs for deals. Empty input unlinks. Backend will
+// resolve CSE/CSM/BD from the deal and populate the Team cell on
+// success. The same extractHsContactId regex handles deal URLs too
+// since it matches any /record/<type>/<id> suffix.
+async function promptHsDeal(confNum, current) {
+  const input = prompt(
+    'Paste a HubSpot deal URL or ID:\n\n' +
+    'Example: https://app.hubspot.com/contacts/.../record/0-3/50443099661\n' +
+    'Or just: 50443099661\n\n' +
+    '(Leave empty to unlink.)',
+    current || ''
+  );
+  if (input === null) return; // cancelled
+  const trimmed = input.trim();
+  let value = null;
+  if (trimmed) {
+    value = extractHsContactId(trimmed);
+    if (!value) { alert('Could not extract a HubSpot deal ID from that input.'); return; }
+  }
+  await patchVms(confNum, { hs_deal_id: value });
+}
+
+async function patchVms(confNum, body) {
   try {
     const res = await fetch(`${API_BASE}/${confNum}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hs_contact_id: id }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    // Update local data and re-render
     const updated = await res.json();
     allRows = allRows.map(r => r.confirmation_number === confNum ? updated : r);
     renderTable(allRows);
