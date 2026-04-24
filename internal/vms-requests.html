@@ -320,7 +320,7 @@ function renderTable(rows) {
         <th>Linear</th>
         <th>Customer</th>
         <th>Team</th>
-        <th class="nowrap">Cameras</th>
+        <th class="nowrap">Tracking</th>
         <th>Location</th>
         <th>Details</th>
         <th></th>
@@ -336,7 +336,7 @@ function renderTable(rows) {
       <td class="nowrap">${renderLinearCell(r)}</td>
       <td>${renderCustomerCell(r)}</td>
       <td>${renderTeamCell(r)}</td>
-      <td class="nowrap">${esc(r.camera_count ?? '—')}</td>
+      <td class="num nowrap">${r.tracking_number ? esc(r.tracking_number) : '<span class="muted">—</span>'}</td>
       <td>${esc([r.city, r.state].filter(Boolean).join(', ') || '—')}</td>
       <td>
         <details class="row-details">
