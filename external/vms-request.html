@@ -549,6 +549,23 @@
           <input type="text" id="jobTitle" placeholder="Job Title / Role" required>
           <div class="error-msg" id="err-jobTitle"></div>
         </div>
+        <!-- Site picker. Hidden unless ?deal=<id> hydrates with at least
+             one associated HubSpot location. One location → readonly
+             display + hidden id carrier. 2+ → <select>. Distinct from
+             the shipping address — installation site ≠ delivery site. -->
+        <div id="siteField" style="display:none">
+          <div style="display:block;font-size:12px;color:var(--grey-500);margin-bottom:4px">
+            Site where the device will be installed
+          </div>
+          <select id="siteSelect" required style="display:none">
+            <option value="">Select a site for the device…</option>
+          </select>
+          <input type="text" id="siteDisplay" placeholder="Site" readonly style="display:none">
+          <input type="hidden" id="siteIdInput" value="">
+          <input type="hidden" id="siteNameInput" value="">
+          <div class="error-msg" id="err-siteSelect"></div>
+          <div id="siteHint" style="margin-top:6px;font-size:12px;color:var(--grey-500)"></div>
+        </div>
       </div>
 
       <div class="btn-row">
@@ -925,9 +942,56 @@
           input.title = 'Prefilled from your CompScience deal';
           document.getElementById('companyLockedNote').style.display = 'block';
         }
+        hydrateSitePicker(data.locations || []);
       })
       .catch(() => { /* silent — prefill is a nicety, not required */ });
   })();
+
+  function formatSite(loc) {
+    const addr = [loc.city, loc.state].filter(Boolean).join(', ');
+    return [loc.name, addr].filter(Boolean).join(' · ');
+  }
+
+  // Show + wire the Site picker based on how many locations the deal
+  // has. 0 → hidden (field never appears, form behaves like a cold
+  // submit for this slot). 1 → readonly display, auto-picked. 2+ →
+  // user-driven <select> with a required placeholder option.
+  function hydrateSitePicker(locations) {
+    if (!Array.isArray(locations) || !locations.length) return;
+    const wrap = document.getElementById('siteField');
+    wrap.style.display = '';
+    const idInput = document.getElementById('siteIdInput');
+    const nameInput = document.getElementById('siteNameInput');
+    const hint = document.getElementById('siteHint');
+
+    if (locations.length === 1) {
+      const loc = locations[0];
+      const display = document.getElementById('siteDisplay');
+      display.value = formatSite(loc);
+      display.title = 'Auto-selected: only site associated with this deal';
+      display.style.display = '';
+      idInput.value = loc.id;
+      nameInput.value = loc.name || '';
+      hint.textContent = 'Only one site on this deal — auto-selected.';
+      return;
+    }
+
+    const select = document.getElementById('siteSelect');
+    for (const loc of locations) {
+      const opt = document.createElement('option');
+      opt.value = loc.id;
+      opt.dataset.name = loc.name || '';
+      opt.textContent = formatSite(loc);
+      select.appendChild(opt);
+    }
+    select.style.display = '';
+    select.addEventListener('change', () => {
+      const sel = select.options[select.selectedIndex];
+      idInput.value = sel.value || '';
+      nameInput.value = sel.dataset.name || '';
+    });
+    hint.textContent = 'Pick the site where the device will be installed. Shipping address can still be different.';
+  }
 
   let currentStep = 1;
   let hasScrolledToBottom = false;
@@ -968,6 +1032,24 @@
       } else {
         el.classList.remove('error');
         err.textContent = '';
+      }
+    }
+    // Site picker on step 1 — only enforced when it's visible
+    // (i.e. deal-prefilled AND the deal has at least one location).
+    if (step === 1) {
+      const wrap = document.getElementById('siteField');
+      if (wrap && wrap.style.display !== 'none') {
+        const siteId = document.getElementById('siteIdInput').value.trim();
+        const select = document.getElementById('siteSelect');
+        const err = document.getElementById('err-siteSelect');
+        if (!siteId) {
+          if (select) select.classList.add('error');
+          if (err) err.textContent = 'Pick the site where the device will be installed';
+          valid = false;
+        } else {
+          if (select) select.classList.remove('error');
+          if (err) err.textContent = '';
+        }
       }
     }
     return valid;
@@ -1107,10 +1189,18 @@
     const dealIdParam = (new URLSearchParams(location.search).get('deal') || '').trim();
     const dealId = /^\d+$/.test(dealIdParam) ? dealIdParam : null;
 
+    // Site pick (only when the Site picker was shown AND a selection
+    // landed in the hidden carriers). null otherwise — cold submits +
+    // deal-linked submits without associated locations both skip it.
+    const siteId = document.getElementById('siteIdInput').value.trim();
+    const siteName = document.getElementById('siteNameInput').value.trim();
+    const site = siteId ? { id: siteId, name: siteName } : null;
+
     submittedData = {
       confirmationNumber: confNum,
       submittedAt: now,
       dealId: dealId,
+      site: site,
       contact: {
         firstName: val('firstName'), lastName: val('lastName'),
         email: val('email'), phone: val('phone'),

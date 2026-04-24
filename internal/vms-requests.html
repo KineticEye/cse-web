@@ -343,7 +343,8 @@ function renderTable(rows) {
           <summary>More</summary>
           <dl class="kv">
             <dt>Phone</dt><dd>${esc(r.phone || '—')}</dd>
-            <dt>Site name</dt><dd>${esc(r.site_name || '—')}</dd>
+            <dt>Site (deal)</dt><dd>${r.location_name ? esc(r.location_name) + (r.hs_location_id ? ` <span class="muted">· ${esc(r.hs_location_id)}</span>` : '') : '<span class="muted">—</span>'}</dd>
+            <dt>Site name (typed)</dt><dd>${esc(r.site_name || '—')}</dd>
             <dt>Street</dt><dd>${esc([r.street, r.suite].filter(Boolean).join(', '))}</dd>
             <dt>ZIP / Country</dt><dd>${esc([r.zip, r.country].filter(Boolean).join(' · '))}</dd>
             <dt>Network env</dt><dd>${esc(r.network_environment || '—')}</dd>
