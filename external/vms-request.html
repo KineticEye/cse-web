@@ -1102,9 +1102,15 @@
     const acceptanceId = 'VMS-ACC-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const now = new Date().toISOString();
 
+    // Carry the prefill deal id (if any) through to the backend so
+    // /v1/public/vms-requests can snapshot CSE/CSM/BD names from the deal.
+    const dealIdParam = (new URLSearchParams(location.search).get('deal') || '').trim();
+    const dealId = /^\d+$/.test(dealIdParam) ? dealIdParam : null;
+
     submittedData = {
       confirmationNumber: confNum,
       submittedAt: now,
+      dealId: dealId,
       contact: {
         firstName: val('firstName'), lastName: val('lastName'),
         email: val('email'), phone: val('phone'),

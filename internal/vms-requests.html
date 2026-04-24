@@ -127,6 +127,17 @@ function hsUrl(contactId) {
   return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-1/${contactId}`;
 }
 
+function hsDealUrl(dealId) {
+  // Deal object type is 0-3 in HubSpot.
+  return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-3/${dealId}`;
+}
+
+function renderDealCell(r) {
+  const id = r.hs_deal_id;
+  if (!id) return '<span class="muted">—</span>';
+  return `<a class="hs-link" href="${esc(hsDealUrl(id))}" target="_blank" title="Open deal in HubSpot">${esc(id)}</a>`;
+}
+
 function linearIdentFromUrl(url) {
   if (!url) return null;
   const m = url.match(/\/issue\/([A-Z]+-\d+)/);
@@ -176,9 +187,13 @@ function renderTable(rows) {
         <th>Confirmation #</th>
         <th>Status</th>
         <th>Verified</th>
-        <th>HubSpot</th>
+        <th>HS Contact</th>
+        <th>HS Deal</th>
         <th>Linear</th>
         <th>Company</th>
+        <th>CSE</th>
+        <th>CSM</th>
+        <th>BD</th>
         <th>Contact</th>
         <th>Email</th>
         <th>Cameras</th>
@@ -191,6 +206,7 @@ function renderTable(rows) {
   const body = rows.map(r => {
     const statusKey = (r.status || '').toLowerCase();
     const statusClass = statusKey ? `pill ${statusKey}` : 'pill';
+    const orNone = v => v ? esc(v) : '<span class="muted">—</span>';
     return `
       <tr id="row-${esc(r.confirmation_number)}">
         <td>${esc(fmtDate(r.submitted_at))}</td>
@@ -198,8 +214,12 @@ function renderTable(rows) {
         <td><span class="${statusClass}">${esc(r.status || '—')}</span></td>
         <td>${r.email_verified_at ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>' : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>'}</td>
         <td>${renderHsCell(r)}</td>
+        <td>${renderDealCell(r)}</td>
         <td>${renderLinearCell(r)}</td>
         <td>${esc(r.company)}</td>
+        <td>${orNone(r.deal_cse_name)}</td>
+        <td>${orNone(r.deal_csm_name)}</td>
+        <td>${orNone(r.deal_bd_name)}</td>
         <td>${esc([r.first_name, r.last_name].filter(Boolean).join(' ') || '—')}<br><span class="muted">${esc(r.job_title || '')}</span></td>
         <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
         <td>${esc(r.camera_count ?? '—')}</td>
