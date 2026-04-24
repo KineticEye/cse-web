@@ -100,6 +100,16 @@ server {
         proxy_set_header Content-Type $http_content_type;
     }
 
+    # Public deal-CSM lookup. Path-prefix match so the deal id flows
+    # through as the URL tail. Returns only the CSM name — see
+    # cse-platform/app.py's public_deal_csm for the rationale.
+    location /api/public/deal-csm/ {
+        proxy_pass http://cse-platform:8000/v1/public/deal-csm/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
     # Email verification link: compscience.support/verify?token=X
     location = /verify {
         proxy_pass http://cse-platform:8000/v1/public/verify-email;

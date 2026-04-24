@@ -492,6 +492,19 @@
     <div class="progress-dot" id="prog4"></div>
   </div>
 
+  <!-- Prefilled-link greeting. Hidden until /api/public/deal-csm/<deal> resolves. -->
+  <div id="csmGreeting"
+       style="display:none;margin:0 0 20px;padding:14px 18px;
+              background:var(--green-50);border:1px solid var(--brand-green);
+              border-radius:8px;font-size:14px;color:var(--grey-700);line-height:1.5">
+    <span style="display:block;font-size:12px;color:var(--grey-600);
+                 text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">
+      Your CompScience account manager
+    </span>
+    <strong id="csmGreetingName" style="font-size:16px;color:var(--blue-midnight)"></strong>
+    <span style="color:var(--grey-600)"> &middot; has prefilled this link for you.</span>
+  </div>
+
   <form id="vmsForm" novalidate>
     <!-- Step 1: Contact Information -->
     <div class="step active" id="step1">
@@ -867,6 +880,25 @@
 <script>
   // Geoapify autocomplete — key is referrer-restricted to *.compscience.support in the Geoapify dashboard.
   const GEOAPIFY_KEY = '2d059fce455e43fabda7a69dc945ceb8';
+
+  // Prefilled-link CSM greeting. When the CSM shares
+  //   https://compscience.support/vms-request.html?deal=<hs_deal_id>
+  // we ask cse-platform for just the CSM's name and surface it above
+  // the form. Silent on any failure — the form still works without it.
+  (function hydrateCsmGreeting() {
+    const params = new URLSearchParams(location.search);
+    const dealId = (params.get('deal') || '').trim();
+    if (!/^\d+$/.test(dealId)) return;
+    fetch('/api/public/deal-csm/' + encodeURIComponent(dealId), { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const name = (data && data.csm_name || '').trim();
+        if (!name) return;
+        document.getElementById('csmGreetingName').textContent = name;
+        document.getElementById('csmGreeting').style.display = 'block';
+      })
+      .catch(() => { /* silent — greeting is a nicety, not required */ });
+  })();
 
   let currentStep = 1;
   let hasScrolledToBottom = false;
