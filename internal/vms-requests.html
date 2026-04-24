@@ -28,18 +28,68 @@
     .status-bar span strong { color: var(--blue-midnight); font-weight: 600; }
 
     .table-wrap { background: white; border: 1px solid var(--grey-300); border-radius: 8px; overflow: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--grey-300); white-space: nowrap; vertical-align: top; }
-    th { background: var(--grey-100); color: var(--grey-600); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; position: sticky; top: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+    /* Default: allow wrapping. Opt-in to nowrap with .nowrap on cells that
+       need it (dates, ids, numbers, pills). This is the single biggest
+       lever against the "always scrolls horizontally" problem. */
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--grey-300); vertical-align: top; }
+    th.nowrap, td.nowrap { white-space: nowrap; }
+    th { background: var(--grey-100); color: var(--grey-600); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; position: sticky; top: 0; white-space: nowrap; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #FAFBFB; }
     td.num { font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; color: var(--grey-600); }
-    td.wrap-cell { white-space: normal; max-width: 280px; }
     .muted { color: var(--grey-500); }
-    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; background: var(--grey-100); color: var(--grey-600); border: 1px solid var(--grey-300); }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; background: var(--grey-100); color: var(--grey-600); border: 1px solid var(--grey-300); white-space: nowrap; }
     .pill.pending { background: #FFF8E5; color: #8A6D00; border-color: #F6E6A3; }
     .pill.task-pending { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
     .pill.task-done { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+
+    /* Status cell — stacks the submission status pill over the verified pill. */
+    .status-stack { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+    /* HubSpot cell — compact two-row stack: contact on top, deal below.
+       Small grey label on the left so the two links are immediately
+       distinguishable without needing separate columns. */
+    .hs-stack { display: flex; flex-direction: column; gap: 4px; line-height: 1.2; }
+    .hs-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .hs-row .hs-label {
+      font-size: 10px;
+      color: var(--grey-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      min-width: 42px;
+    }
+    .btn-mini {
+      padding: 1px 5px;
+      border: 1px solid var(--grey-300);
+      background: white;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--grey-500);
+    }
+    .btn-mini:hover { border-color: var(--brand-green); color: var(--brand-green); }
+
+    /* Customer cell — company + contact person + email, stacked. Capped
+       width so long emails don't stretch the whole table; they wrap
+       naturally inside the max-width. */
+    .customer-cell { max-width: 260px; }
+    .cust-company { font-weight: 600; color: var(--blue-midnight); }
+    .cust-person { font-size: 12px; color: var(--grey-600); margin-top: 2px; }
+    .cust-email { font-size: 12px; margin-top: 2px; word-break: break-all; }
+
+    /* Team cell — three mini rows (CSE / CSM / BD). Empty roles drop out. */
+    .team-stack { display: flex; flex-direction: column; gap: 2px; line-height: 1.3; }
+    .team-row { display: flex; gap: 6px; font-size: 12px; }
+    .team-label {
+      font-size: 10px;
+      color: var(--grey-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      min-width: 28px;
+      padding-top: 1px;
+    }
 
     .empty, .error { padding: 40px; text-align: center; color: var(--grey-500); font-size: 14px; }
     .error { color: #991B1B; }
@@ -132,12 +182,6 @@ function hsDealUrl(dealId) {
   return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-3/${dealId}`;
 }
 
-function renderDealCell(r) {
-  const id = r.hs_deal_id;
-  if (!id) return '<span class="muted">—</span>';
-  return `<a class="hs-link" href="${esc(hsDealUrl(id))}" target="_blank" title="Open deal in HubSpot">${esc(id)}</a>`;
-}
-
 function linearIdentFromUrl(url) {
   if (!url) return null;
   const m = url.match(/\/issue\/([A-Z]+-\d+)/);
@@ -165,13 +209,65 @@ function renderStatus(rows) {
   document.getElementById('statusBar').innerHTML = parts.join('');
 }
 
-function renderHsCell(r) {
+function renderHsContact(r) {
   const id = r.hs_contact_id;
-  if (id) {
-    return `<a class="hs-link" href="${esc(hsUrl(id))}" target="_blank" title="Open in HubSpot">${esc(id)}</a>
-            <button class="btn-sm" style="margin-left:4px;padding:2px 6px;font-size:10px" onclick="promptHs('${esc(r.confirmation_number)}','${esc(id)}')" title="Edit">&#9998;</button>`;
+  if (!id) {
+    return `<button class="btn-mini" onclick="promptHs('${esc(r.confirmation_number)}','')">link</button>`;
   }
-  return `<button class="btn-sm" onclick="promptHs('${esc(r.confirmation_number)}','')">Link</button>`;
+  return `<a class="hs-link" href="${esc(hsUrl(id))}" target="_blank" title="Open contact in HubSpot">${esc(id)}</a>
+          <button class="btn-mini" onclick="promptHs('${esc(r.confirmation_number)}','${esc(id)}')" title="Edit contact id">&#9998;</button>`;
+}
+
+function renderHsDeal(r) {
+  const id = r.hs_deal_id;
+  if (!id) return '<span class="muted">—</span>';
+  return `<a class="hs-link" href="${esc(hsDealUrl(id))}" target="_blank" title="Open deal in HubSpot">${esc(id)}</a>`;
+}
+
+function renderHubspotCell(r) {
+  return `
+    <div class="hs-stack">
+      <div class="hs-row"><span class="hs-label">Contact</span>${renderHsContact(r)}</div>
+      <div class="hs-row"><span class="hs-label">Deal</span>${renderHsDeal(r)}</div>
+    </div>
+  `;
+}
+
+function renderStatusCell(r) {
+  const statusKey = (r.status || '').toLowerCase();
+  const statusClass = statusKey ? `pill ${statusKey}` : 'pill';
+  const verified = r.email_verified_at
+    ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>'
+    : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>';
+  return `<div class="status-stack">
+    <span class="${statusClass}">${esc(r.status || '—')}</span>
+    ${verified}
+  </div>`;
+}
+
+function renderCustomerCell(r) {
+  const name = [r.first_name, r.last_name].filter(Boolean).join(' ');
+  const person = [name || '—', r.job_title].filter(Boolean).join(' · ');
+  const email = r.email
+    ? `<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`
+    : '<span class="muted">—</span>';
+  return `<div class="customer-cell">
+    <div class="cust-company">${esc(r.company || '—')}</div>
+    <div class="cust-person">${esc(person)}</div>
+    <div class="cust-email">${email}</div>
+  </div>`;
+}
+
+function renderTeamCell(r) {
+  const row = (label, v) => v
+    ? `<div class="team-row"><span class="team-label">${label}</span><span>${esc(v)}</span></div>`
+    : '';
+  const rows = [
+    row('CSE', r.deal_cse_name),
+    row('CSM', r.deal_csm_name),
+    row('BD',  r.deal_bd_name),
+  ].filter(Boolean);
+  return rows.length ? `<div class="team-stack">${rows.join('')}</div>` : '<span class="muted">—</span>';
 }
 
 function renderTable(rows) {
@@ -183,67 +279,50 @@ function renderTable(rows) {
   const head = `
     <thead>
       <tr>
-        <th>Submitted</th>
-        <th>Confirmation #</th>
+        <th class="nowrap">Submitted</th>
+        <th class="nowrap">Conf #</th>
         <th>Status</th>
-        <th>Verified</th>
-        <th>HS Contact</th>
-        <th>HS Deal</th>
+        <th>HubSpot</th>
         <th>Linear</th>
-        <th>Company</th>
-        <th>CSE</th>
-        <th>CSM</th>
-        <th>BD</th>
-        <th>Contact</th>
-        <th>Email</th>
-        <th>Cameras</th>
-        <th>City, State</th>
+        <th>Customer</th>
+        <th>Team</th>
+        <th class="nowrap">Cameras</th>
+        <th>Location</th>
         <th>Details</th>
         <th></th>
       </tr>
     </thead>
   `;
-  const body = rows.map(r => {
-    const statusKey = (r.status || '').toLowerCase();
-    const statusClass = statusKey ? `pill ${statusKey}` : 'pill';
-    const orNone = v => v ? esc(v) : '<span class="muted">—</span>';
-    return `
-      <tr id="row-${esc(r.confirmation_number)}">
-        <td>${esc(fmtDate(r.submitted_at))}</td>
-        <td class="num">${esc(r.confirmation_number)}</td>
-        <td><span class="${statusClass}">${esc(r.status || '—')}</span></td>
-        <td>${r.email_verified_at ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>' : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>'}</td>
-        <td>${renderHsCell(r)}</td>
-        <td>${renderDealCell(r)}</td>
-        <td>${renderLinearCell(r)}</td>
-        <td>${esc(r.company)}</td>
-        <td>${orNone(r.deal_cse_name)}</td>
-        <td>${orNone(r.deal_csm_name)}</td>
-        <td>${orNone(r.deal_bd_name)}</td>
-        <td>${esc([r.first_name, r.last_name].filter(Boolean).join(' ') || '—')}<br><span class="muted">${esc(r.job_title || '')}</span></td>
-        <td><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></td>
-        <td>${esc(r.camera_count ?? '—')}</td>
-        <td>${esc([r.city, r.state].filter(Boolean).join(', ') || '—')}</td>
-        <td>
-          <details class="row-details">
-            <summary>More</summary>
-            <dl class="kv">
-              <dt>Phone</dt><dd>${esc(r.phone || '—')}</dd>
-              <dt>Site name</dt><dd>${esc(r.site_name || '—')}</dd>
-              <dt>Street</dt><dd>${esc([r.street, r.suite].filter(Boolean).join(', '))}</dd>
-              <dt>ZIP / Country</dt><dd>${esc([r.zip, r.country].filter(Boolean).join(' · '))}</dd>
-              <dt>Network env</dt><dd>${esc(r.network_environment || '—')}</dd>
-              <dt>Special instructions</dt><dd>${esc(r.special_instructions || '—')}</dd>
-              <dt>ToS version</dt><dd class="num">${esc(r.tos_version || '—')}</dd>
-              <dt>ToS accepted at</dt><dd>${esc(fmtDate(r.tos_accepted_at))}</dd>
-              <dt>Acceptance ID</dt><dd class="num">${esc(r.acceptance_id || '—')}</dd>
-            </dl>
-          </details>
-        </td>
-        <td><button class="btn-sm btn-danger" onclick="confirmDelete('${esc(r.confirmation_number)}','${esc(r.company)}')">Delete</button></td>
-      </tr>
-    `;
-  }).join('');
+  const body = rows.map(r => `
+    <tr id="row-${esc(r.confirmation_number)}">
+      <td class="nowrap">${esc(fmtDate(r.submitted_at))}</td>
+      <td class="num nowrap">${esc(r.confirmation_number)}</td>
+      <td>${renderStatusCell(r)}</td>
+      <td>${renderHubspotCell(r)}</td>
+      <td class="nowrap">${renderLinearCell(r)}</td>
+      <td>${renderCustomerCell(r)}</td>
+      <td>${renderTeamCell(r)}</td>
+      <td class="nowrap">${esc(r.camera_count ?? '—')}</td>
+      <td>${esc([r.city, r.state].filter(Boolean).join(', ') || '—')}</td>
+      <td>
+        <details class="row-details">
+          <summary>More</summary>
+          <dl class="kv">
+            <dt>Phone</dt><dd>${esc(r.phone || '—')}</dd>
+            <dt>Site name</dt><dd>${esc(r.site_name || '—')}</dd>
+            <dt>Street</dt><dd>${esc([r.street, r.suite].filter(Boolean).join(', '))}</dd>
+            <dt>ZIP / Country</dt><dd>${esc([r.zip, r.country].filter(Boolean).join(' · '))}</dd>
+            <dt>Network env</dt><dd>${esc(r.network_environment || '—')}</dd>
+            <dt>Special instructions</dt><dd>${esc(r.special_instructions || '—')}</dd>
+            <dt>ToS version</dt><dd class="num">${esc(r.tos_version || '—')}</dd>
+            <dt>ToS accepted at</dt><dd>${esc(fmtDate(r.tos_accepted_at))}</dd>
+            <dt>Acceptance ID</dt><dd class="num">${esc(r.acceptance_id || '—')}</dd>
+          </dl>
+        </details>
+      </td>
+      <td class="nowrap"><button class="btn-sm btn-danger" onclick="confirmDelete('${esc(r.confirmation_number)}','${esc(r.company)}')">Delete</button></td>
+    </tr>
+  `).join('');
   wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
 }
 
