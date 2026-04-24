@@ -88,6 +88,14 @@
     input.error, select.error, textarea.error {
       border-color: var(--danger);
     }
+    input[readonly], textarea[readonly] {
+      background: var(--grey-100);
+      color: var(--grey-700);
+      cursor: not-allowed;
+    }
+    input[readonly]:focus, textarea[readonly]:focus {
+      border-color: var(--grey-300);
+    }
 
     textarea { height: auto; resize: vertical; }
 
@@ -492,7 +500,7 @@
     <div class="progress-dot" id="prog4"></div>
   </div>
 
-  <!-- Prefilled-link greeting. Hidden until /api/public/deal-csm/<deal> resolves. -->
+  <!-- Prefilled-link greeting. Hidden until /api/public/deal-prefill/<deal> resolves. -->
   <div id="csmGreeting"
        style="display:none;margin:0 0 20px;padding:14px 18px;
               background:var(--green-50);border:1px solid var(--brand-green);
@@ -529,8 +537,13 @@
           <div class="error-msg" id="err-phone"></div>
         </div>
         <div>
-          <input type="text" id="company" placeholder="Company / Organization" required>
+          <input type="text" id="company" placeholder="Company where the device will be installed" required>
           <div class="error-msg" id="err-company"></div>
+          <!-- Shown only when ?deal=<id> prefills + locks this field. -->
+          <div id="companyLockedNote"
+               style="display:none;margin-top:6px;font-size:12px;color:var(--grey-500)">
+            Prefilled from your CompScience deal &middot; contact your account manager if this looks wrong.
+          </div>
         </div>
         <div>
           <input type="text" id="jobTitle" placeholder="Job Title / Role" required>
@@ -881,23 +894,39 @@
   // Geoapify autocomplete — key is referrer-restricted to *.compscience.support in the Geoapify dashboard.
   const GEOAPIFY_KEY = '2d059fce455e43fabda7a69dc945ceb8';
 
-  // Prefilled-link CSM greeting. When the CSM shares
+  // Prefilled-link flow. When the CSM shares
   //   https://compscience.support/vms-request.html?deal=<hs_deal_id>
-  // we ask cse-platform for just the CSM's name and surface it above
-  // the form. Silent on any failure — the form still works without it.
-  (function hydrateCsmGreeting() {
+  // we ask cse-platform for the deal's CSM name + primary-company name
+  // and:
+  //   - greet the prospect with the CSM above the form
+  //   - prefill + lock the "Company where the device will be installed"
+  //     field so 3rd-party IT submitters can't accidentally enter their
+  //     own org name instead of the customer's
+  // Silent on any failure — the form still works for cold visits.
+  (function hydrateDealPrefill() {
     const params = new URLSearchParams(location.search);
     const dealId = (params.get('deal') || '').trim();
     if (!/^\d+$/.test(dealId)) return;
-    fetch('/api/public/deal-csm/' + encodeURIComponent(dealId), { cache: 'no-store' })
+    fetch('/api/public/deal-prefill/' + encodeURIComponent(dealId), { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        const name = (data && data.csm_name || '').trim();
-        if (!name) return;
-        document.getElementById('csmGreetingName').textContent = name;
-        document.getElementById('csmGreeting').style.display = 'block';
+        if (!data) return;
+        const name = (data.csm_name || '').trim();
+        if (name) {
+          document.getElementById('csmGreetingName').textContent = name;
+          document.getElementById('csmGreeting').style.display = 'block';
+        }
+        const company = (data.company || '').trim();
+        if (company) {
+          const input = document.getElementById('company');
+          input.value = company;
+          input.setAttribute('readonly', 'readonly');
+          input.setAttribute('aria-readonly', 'true');
+          input.title = 'Prefilled from your CompScience deal';
+          document.getElementById('companyLockedNote').style.display = 'block';
+        }
       })
-      .catch(() => { /* silent — greeting is a nicety, not required */ });
+      .catch(() => { /* silent — prefill is a nicety, not required */ });
   })();
 
   let currentStep = 1;
