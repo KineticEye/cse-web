@@ -197,6 +197,11 @@ function hsDealUrl(dealId) {
   return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-3/${dealId}`;
 }
 
+function hsDeviceUrl(deviceId) {
+  // Device custom object — 2-51746903.
+  return `https://app.hubspot.com/contacts/${HS_PORTAL}/record/2-51746903/${deviceId}`;
+}
+
 function linearIdentFromUrl(url) {
   if (!url) return null;
   const m = url.match(/\/issue\/([A-Z]+-\d+)/);
@@ -242,11 +247,18 @@ function renderHsDeal(r) {
           <button class="btn-mini" onclick="promptHsDeal('${esc(r.confirmation_number)}','${esc(id)}')" title="Edit deal id">&#9998;</button>`;
 }
 
+function renderHsDevice(r) {
+  const id = r.hs_device_id;
+  if (!id) return '<span class="muted">—</span>';
+  return `<a class="hs-link" href="${esc(hsDeviceUrl(id))}" target="_blank" title="Open device in HubSpot">${esc(id)}</a>`;
+}
+
 function renderHubspotCell(r) {
   return `
     <div class="hs-stack">
       <div class="hs-row"><span class="hs-label">Contact</span>${renderHsContact(r)}</div>
       <div class="hs-row"><span class="hs-label">Deal</span>${renderHsDeal(r)}</div>
+      <div class="hs-row"><span class="hs-label">Device</span>${renderHsDevice(r)}</div>
     </div>
   `;
 }
