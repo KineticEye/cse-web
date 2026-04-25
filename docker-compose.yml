@@ -20,18 +20,51 @@ services:
       - --cookie-domain=.compscience.support
       - --whitelist-domain=.compscience.support
       - --redirect-url=https://internal.compscience.support/oauth2/callback
+      # --reverse-proxy lets oauth2-proxy trust X-Forwarded-* from
+      # Traefik so the per-subdomain redirect dance (where the user
+      # comes from mora.compscience.support but the OAuth callback
+      # lands on internal.compscience.support) reconstructs the right
+      # rd= return URL.
+      - --reverse-proxy=true
       - --skip-provider-button=true
       - --pass-host-header=true
       - --set-xauthrequest=true
       - --pass-user-headers=true
     labels:
       - "traefik.enable=true"
+      # ── internal.compscience.support — full upstream proxy (existing) ──
       - "traefik.http.routers.web.rule=Host(`internal.compscience.support`)"
       - "traefik.http.routers.web.entrypoints=web"
       - "traefik.http.routers.web-secure.rule=Host(`internal.compscience.support`)"
       - "traefik.http.routers.web-secure.entrypoints=websecure"
       - "traefik.http.routers.web-secure.tls.certresolver=letsencrypt"
       - "traefik.http.services.web.loadbalancer.server.port=4180"
+
+      # ── /oauth2/* on other subdomains we gate ──
+      # Each subdomain protected by the compscience-auth middleware below
+      # needs /oauth2/* served from its own host so the login + callback
+      # cookie flow lands on the right domain. Add one router per host.
+      # Currently: mora.compscience.support.
+      - "traefik.http.routers.mora-oauth.rule=Host(`mora.compscience.support`) && PathPrefix(`/oauth2/`)"
+      - "traefik.http.routers.mora-oauth.entrypoints=websecure"
+      - "traefik.http.routers.mora-oauth.tls=true"
+      - "traefik.http.routers.mora-oauth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.mora-oauth.service=web"
+
+      # ── Reusable middlewares: compscience-auth + compscience-auth-redirect ──
+      # Pair these on any subdomain router that should require Google SSO.
+      #   compscience-auth          → forward-auth → /oauth2/auth
+      #   compscience-auth-redirect → on 401, fetch /oauth2/sign_in?rd=…
+      #                               and forward the resulting 302 to
+      #                               the user. Without the redirect
+      #                               middleware, unauthenticated users
+      #                               get a bare 401 page.
+      - "traefik.http.middlewares.compscience-auth.forwardauth.address=http://oauth2-proxy:4180/oauth2/auth"
+      - "traefik.http.middlewares.compscience-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.compscience-auth.forwardauth.authResponseHeaders=X-Auth-Request-User,X-Auth-Request-Email,X-Auth-Request-Preferred-Username"
+      - "traefik.http.middlewares.compscience-auth-redirect.errors.status=401"
+      - "traefik.http.middlewares.compscience-auth-redirect.errors.service=web"
+      - "traefik.http.middlewares.compscience-auth-redirect.errors.query=/oauth2/sign_in?rd=https%3A%2F%2F{host}{url}"
     depends_on:
       - web
 
