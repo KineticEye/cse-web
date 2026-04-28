@@ -267,13 +267,18 @@ function renderHubspotCell(r) {
 }
 
 function renderStatusCell(r) {
-  const statusKey = (r.status || '').toLowerCase();
+  // Prefer the HubSpot Device's stage when we have one — that's where
+  // the customer-visible reality lives (Shipped, Received, Active, …).
+  // Falls back to the internal task workflow status (task-pending /
+  // fulfilled) for rows that don't yet have a Device linked.
+  const display = (r.device_stage_label || r.status || '').trim();
+  const statusKey = display.toLowerCase().replace(/\s+/g, '-');
   const statusClass = statusKey ? `pill ${statusKey}` : 'pill';
   const verified = r.email_verified_at
     ? '<span class="pill" style="background:#D1FAE5;color:#065F46;border-color:#6EE7B7">Verified</span>'
     : '<span class="pill" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5">Pending</span>';
   return `<div class="status-stack">
-    <span class="${statusClass}">${esc(r.status || '—')}</span>
+    <span class="${statusClass}">${esc(display || '—')}</span>
     ${verified}
   </div>`;
 }
